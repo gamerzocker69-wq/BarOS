@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 
+const API_URL = "https://script.google.com/macros/s/AKfycbx21pznd_AKubd0hi3xppb0kVQ5HeukIiASdUfdZylwkFJoJvQoXhoQKj3tOedFzvE5Dw/exec";
+
 // ─── DONNÉES DE DÉMO ───────────────────────────────────────────────────────
 const DEMO_RESERVATIONS = [
   { id: 1, nom: "Famille Dupont", tel: "06 12 34 56 78", date: "2025-03-12", heure: "19:30", couverts: 4, type: "Terrasse", statut: "Confirmée", notes: "" },
@@ -585,7 +587,13 @@ function Stock({ data, setData, onNav }) {
   const filtered = filtre === "Tout" ? data.stock : data.stock.filter(s=>s.categorie===filtre);
   const alertes = data.stock.filter(s=>s.quantite <= s.seuil);
 
-  const addItem = (item) => setData(d => ({ ...d, stock: [...d.stock, item] }));
+  const addItem = async (item) => {
+    await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({ sheet: "Stock", action: "add", data: item })
+    });
+    setData(d => ({ ...d, stock: [...d.stock, item] }));
+  };
 
   return (
     <>
@@ -649,7 +657,13 @@ function Reservations({ data, setData }) {
     return r.type===filtre;
   }).sort((a,b)=>a.date.localeCompare(b.date)||a.heure.localeCompare(b.heure));
 
-  const addResa = (r) => setData(d => ({ ...d, reservations: [...d.reservations, r] }));
+  const addResa = async (r) => {
+    await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({ sheet: "Reservations", action: "add", data: r })
+    });
+    setData(d => ({ ...d, reservations: [...d.reservations, r] }));
+  };
 
   return (
     <>
@@ -690,7 +704,13 @@ function Taches({ data, setData }) {
   const filtered = filtre==="Tout" ? data.taches : data.taches.filter(t=>t.categorie===filtre);
 
   const toggle = (id) => setData(d => ({ ...d, taches: d.taches.map(t => t.id===id ? {...t, statut: t.statut==="Fait"?"À faire":"Fait"} : t) }));
-  const addTache = (t) => setData(d => ({ ...d, taches: [...d.taches, t] }));
+  const addTache = async (t) => {
+    await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({ sheet: "Taches", action: "add", data: t })
+    });
+    setData(d => ({ ...d, taches: [...d.taches, t] }));
+  };
 
   return (
     <>
@@ -755,12 +775,38 @@ function Planning({ data }) {
 // ─── APP ROOT ─────────────────────────────────────────────────────────────
 export default function App() {
   const [page, setPage] = useState("dashboard");
+  const [loading, setLoading] = useState(true);
   const [data, setData] = useState({
-    reservations: DEMO_RESERVATIONS,
-    stock: DEMO_STOCK,
-    taches: DEMO_TACHES,
-    planning: DEMO_PLANNING,
+    reservations: [],
+    stock: [],
+    taches: [],
+    planning: [],
   });
+
+  useEffect(() => {
+    const fetchAll = async () => {
+      try {
+        const [res, stock, taches, planning] = await Promise.all([
+          fetch(`${API_URL}?sheet=Reservations`).then(r => r.json()),
+          fetch(`${API_URL}?sheet=Stock`).then(r => r.json()),
+          fetch(`${API_URL}?sheet=Taches`).then(r => r.json()),
+          fetch(`${API_URL}?sheet=Planning`).then(r => r.json()),
+        ]);
+        setData({ reservations: res, stock, taches, planning });
+      } catch(e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAll();
+  }, []);
+
+  if (loading) return (
+    <div style={{display:"flex",justifyContent:"center",alignItems:"center",height:"100vh",background:"#070706",color:"#aabf38",fontFamily:"'DM Mono',monospace",fontSize:13}}>
+      Chargement...
+    </div>
+  );
 
   const nav = [
     { id:"dashboard", icon:"🏠", label:"Dashboard" },
