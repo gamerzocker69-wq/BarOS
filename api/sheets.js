@@ -12,19 +12,27 @@ export default async function handler(req, res) {
     try {
       if (req.method === "GET") {
         const { sheet } = req.query;
-        const response = await fetch(`${APPS_SCRIPT_URL}?sheet=${sheet}`);
+        const response = await fetch(`${APPS_SCRIPT_URL}?sheet=${sheet}`, {
+          redirect: "follow"
+        });
         const data = await response.json();
         return res.status(200).json(data);
       }
   
       if (req.method === "POST") {
+        const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
         const response = await fetch(APPS_SCRIPT_URL, {
           method: "POST",
+          redirect: "follow",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(req.body),
+          body: JSON.stringify(body),
         });
-        const data = await response.json();
-        return res.status(200).json(data);
+        const text = await response.text();
+        try {
+          return res.status(200).json(JSON.parse(text));
+        } catch {
+          return res.status(200).json({ success: true, raw: text });
+        }
       }
     } catch (e) {
       return res.status(500).json({ error: e.message });
