@@ -29,11 +29,10 @@ const DEMO_TACHES = [
 ];
 
 const DEMO_PLANNING = [
-  { id: 1, employe: "Marco", poste: "Manager", date: "2025-03-12", debut: "17:00", fin: "01:00" },
-  { id: 2, employe: "Sarah", poste: "Service", date: "2025-03-12", debut: "18:00", fin: "00:00" },
-  { id: 3, employe: "Lucas", poste: "Bar", date: "2025-03-12", debut: "18:00", fin: "02:00" },
-  { id: 4, employe: "Camille", poste: "Service", date: "2025-03-12", debut: "19:00", fin: "23:00" },
-  { id: 5, employe: "Marco", poste: "Manager", date: "2025-03-13", debut: "17:00", fin: "01:00" },
+  { id: 1, employe: "Marius", poste: "Manager", date: "2025-03-12", debut: "17:00", fin: "01:00" },
+  { id: 2, employe: "Marie", poste: "Manager", date: "2025-03-12", debut: "18:00", fin: "00:00" },
+  { id: 3, employe: "Charlotte", poste: "Bar", date: "2025-03-12", debut: "18:00", fin: "02:00" },
+  { id: 4, employe: "Fanny", poste: "Service", date: "2025-03-12", debut: "19:00", fin: "23:00" },
   { id: 6, employe: "Thomas", poste: "Cuisine", date: "2025-03-13", debut: "16:00", fin: "23:00" },
 ];
 
@@ -485,7 +484,7 @@ function Dashboard({ data, onNav }) {
       <div className="header">
         <div className="header-top">
           <div>
-            <div className="greeting">Bonsoir, Marco 👋</div>
+            <div className="greeting">Bonsoir, Marie et Marius 👋</div>
             <div className="logo">Bar<em>OS</em></div>
           </div>
           <div className="notif-btn">🔔<div className="notif-dot"/></div>
