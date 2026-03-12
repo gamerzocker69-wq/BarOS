@@ -9,21 +9,23 @@ export default async function handler(req, res) {
   
     try {
       if (req.method === "GET") {
-        const { sheet } = req.query;
-        const response = await fetch(`${BASE}/sheet/${sheet}`);
+        const sheet = req.query.sheet;
+        const response = await fetch(BASE + "?sheet=" + sheet);
         const data = await response.json();
         return res.status(200).json(data);
       }
   
       if (req.method === "POST") {
         const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
-        const { sheet, action, data } = body;
+        const sheet = body.sheet;
+        const action = body.action;
+        const data = body.data;
   
         if (action === "add") {
-          const response = await fetch(`${BASE}/sheet/${sheet}`, {
+          const response = await fetch(BASE + "?sheet=" + sheet, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ data })
+            body: JSON.stringify({ data: data })
           });
           const result = await response.json();
           return res.status(200).json(result);
