@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-const API_URL = "https://script.google.com/macros/s/AKfycbx21pznd_AKubd0hi3xppb0kVQ5HeukIiASdUfdZylwkFJoJvQoXhoQKj3tOedFzvE5Dw/exec";
+const API_URL = "/api/sheets";
 
 // ─── DONNÉES DE DÉMO ───────────────────────────────────────────────────────
 const DEMO_RESERVATIONS = [
