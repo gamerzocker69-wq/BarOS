@@ -434,6 +434,14 @@ function Dashboard({data,onNav,caJour}) {
             <div className="kpi-value">{data.taches.length-tachesRestantes.length}<span style={{fontSize:14,color:"var(--muted)"}}>/{data.taches.length}</span></div>
             <div className={`kpi-sub ${tachesRestantes.length>3?"warn":""}`}>{tachesRestantes.length} restantes</div>
           </div>
+          <div className="kpi-card" onClick={()=>onNav("stock")}>
+            <span className="kpi-icon">📦</span>
+            <div className="kpi-label">Stock</div>
+            <div className="kpi-value" style={{fontSize:alertes.length>0?"20px":"26px",color:alertes.length>0?"#e74c3c":"var(--cream)"}}>
+              {alertes.length>0?`⚠️ ${alertes.length}`:"OK"}
+            </div>
+            <div className={`kpi-sub ${alertes.length>0?"danger":""}`}>{alertes.length>0?"alertes bas":"tout ok"}</div>
+          </div>
           {/* CA du jour — 4ème carré */}
           <div className="kpi-card" onClick={()=>onNav("tables")} style={{position:"relative",overflow:"hidden"}}>
             <span className="kpi-icon">💰</span>
