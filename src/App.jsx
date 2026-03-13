@@ -203,6 +203,21 @@ const css = `
   .ca-bar-track { height:6px; background:var(--border); border-radius:4px; overflow:hidden; }
   .ca-bar-fill { height:100%; border-radius:4px; background:linear-gradient(90deg,var(--olive-dim),var(--olive-bright)); transition:width .8s ease; }
   .ca-bar-sub { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); margin-top:6px; display:flex; justify-content:space-between; }
+  /* ── BAR PAGE ── */
+  .bar-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px 24px; gap:12px; }
+  .bar-empty-icon { font-size:48px; opacity:.3; }
+  .bar-empty-text { font-family:"DM Mono",monospace; font-size:12px; color:var(--muted); text-align:center; }
+  .bar-ticket { background:var(--surface); border:1px solid var(--border); border-radius:16px; margin:0 24px 12px; overflow:hidden; animation:slideUp .3s ease both; }
+  .bar-ticket.urgent { border-color:rgba(192,57,43,.4); }
+  .bar-ticket-header { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--border); }
+  .bar-ticket-table { font-size:14px; font-weight:800; color:var(--cream); }
+  .bar-ticket-time { font-family:"DM Mono",monospace; font-size:10px; color:var(--muted); }
+  .bar-ticket-body { padding:10px 16px 14px; }
+  .bar-ticket-line { display:flex; align-items:center; gap:10px; padding:5px 0; border-bottom:1px solid var(--border); }
+  .bar-ticket-line:last-child { border-bottom:none; }
+  .bar-ticket-qty { font-family:"DM Mono",monospace; font-size:13px; font-weight:700; color:var(--olive-bright); min-width:28px; }
+  .bar-ticket-nom { font-size:13px; color:var(--cream); flex:1; }
+  .bar-ticket-cat { font-family:"DM Mono",monospace; font-size:9px; padding:2px 7px; border-radius:100px; background:var(--surface2); border:1px solid var(--border); color:var(--muted); }
 `;
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────
@@ -844,11 +859,8 @@ const TABLES_CONFIG = [
 ];
 
 // ─── TABLES + COMMANDES ────────────────────────────────────────────────────
-function Tables({ data, setData, showToast, caJour, setCaJour }) {
+function Tables({ data, setData, showToast, caJour, setCaJour, tables, setTables }) {
   const [selectedTable, setSelectedTable] = useState(null);
-  const [tables, setTables] = useState(() =>
-    TABLES_CONFIG.map(t => ({ ...t, statut: "libre", commande: [], total: 0 }))
-  );
   const [menuCat, setMenuCat] = useState("Bières");
   const cats = ["Bières", "Cocktails", "Softs", "Manger"];
 
@@ -880,7 +892,12 @@ function Tables({ data, setData, showToast, caJour, setCaJour }) {
 
   const envoyerCommande = () => {
     if (!selectedT || selectedT.commande.length === 0) return;
-    showToast(`Commande envoyée — ${selectedT.nom} ✓`);
+    // Marquer la table comme "envoyée" → visible sur page Bar
+    setTables(ts => ts.map(t => t.id === selectedTable
+      ? { ...t, envoye: true, envoyeAt: Date.now() }
+      : t
+    ));
+    showToast(`🍹 Envoyé au bar — ${selectedT.nom} ✓`);
     // Déduire le stock pour chaque item commandé
     selectedT.commande.forEach(item => {
       if (item.stockProduit) {
@@ -899,7 +916,7 @@ function Tables({ data, setData, showToast, caJour, setCaJour }) {
     const montant = selectedT.total;
     setCaJour(ca => ca + montant);
     setTables(ts => ts.map(t => t.id === selectedTable
-      ? { ...t, statut: "libre", commande: [], total: 0 }
+      ? { ...t, statut: "libre", commande: [], total: 0, envoye: false, envoyeAt: null }
       : t
     ));
     showToast(`💰 ${montant.toFixed(2)}€ encaissé — ${selectedT.nom} libérée ✓`);
@@ -908,7 +925,7 @@ function Tables({ data, setData, showToast, caJour, setCaJour }) {
 
   const libererTable = () => {
     setTables(ts => ts.map(t => t.id === selectedTable
-      ? { ...t, statut: "libre", commande: [], total: 0 }
+      ? { ...t, statut: "libre", commande: [], total: 0, envoye: false, envoyeAt: null }
       : t
     ));
     setSelectedTable(null);
@@ -1038,12 +1055,106 @@ function Tables({ data, setData, showToast, caJour, setCaJour }) {
   );
 }
 // ─── APP ROOT ─────────────────────────────────────────────────────────────
+
+// ─── BAR PAGE ──────────────────────────────────────────────────────────────
+function Bar({ tables }) {
+  // Toutes les tables avec commandes envoyées (statut encours ou apayer)
+  const tablesActives = tables.filter(t => t.commande.length > 0 && t.envoye);
+  const totalEnAttente = tablesActives.reduce((s, t) => s + t.commande.reduce((a, c) => a + c.qty, 0), 0);
+
+  return (
+    <>
+      <div className="page-header">
+        <div>
+          <div className="page-title">Bar · Cuisine</div>
+          <div className="page-count">
+            {tablesActives.length > 0
+              ? `${tablesActives.length} table${tablesActives.length > 1 ? "s" : ""} · ${totalEnAttente} articles`
+              : "Aucune commande en attente"}
+          </div>
+        </div>
+        {tablesActives.length > 0 && (
+          <div style={{
+            width: 32, height: 32, borderRadius: "50%",
+            background: "rgba(192,57,43,.15)", border: "1px solid rgba(192,57,43,.4)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontFamily: "'DM Mono',monospace", fontSize: 13, fontWeight: 700, color: "#e74c3c"
+          }}>{tablesActives.length}</div>
+        )}
+      </div>
+
+      <div style={{ paddingTop: 14, paddingBottom: 20 }}>
+        {tablesActives.length === 0 ? (
+          <div className="bar-empty">
+            <div className="bar-empty-icon">🍹</div>
+            <div className="bar-empty-text">Aucune commande envoyée<br/>Les tickets apparaissent ici dès qu'un serveur envoie une commande</div>
+          </div>
+        ) : (
+          tablesActives.map((t, i) => {
+            const mins = Math.floor((Date.now() - t.envoyeAt) / 60000);
+            const isUrgent = mins >= 5;
+            // Grouper par catégorie pour le bar
+            const parCat = t.commande.reduce((acc, item) => {
+              const cat = item.cat;
+              if (!acc[cat]) acc[cat] = [];
+              acc[cat].push(item);
+              return acc;
+            }, {});
+            return (
+              <div key={t.id} className={`bar-ticket ${isUrgent ? "urgent" : ""}`} style={{ animationDelay: `${i * 0.08}s` }}>
+                <div className="bar-ticket-header">
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{
+                      width: 8, height: 8, borderRadius: "50%",
+                      background: isUrgent ? "#e74c3c" : "var(--olive-bright)",
+                      animation: "blink 1.5s infinite"
+                    }} />
+                    <div className="bar-ticket-table">{t.nom}</div>
+                    <div style={{
+                      fontFamily: "'DM Mono',monospace", fontSize: 9,
+                      padding: "2px 8px", borderRadius: 100,
+                      background: t.zone === "Terrasse" ? "var(--success-bg)" : t.zone === "Bar" ? "var(--info-bg)" : "var(--surface2)",
+                      border: "1px solid var(--border)",
+                      color: t.zone === "Terrasse" ? "var(--olive-bright)" : t.zone === "Bar" ? "#6ab0d4" : "var(--muted)"
+                    }}>{t.zone}</div>
+                  </div>
+                  <div className="bar-ticket-time" style={{ color: isUrgent ? "#e74c3c" : "var(--muted)" }}>
+                    {mins === 0 ? "À l'instant" : `${mins} min`}{isUrgent ? " ⚠️" : ""}
+                  </div>
+                </div>
+                <div className="bar-ticket-body">
+                  {Object.entries(parCat).map(([cat, items]) => (
+                    <div key={cat}>
+                      <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: "var(--muted)", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4, marginTop: 6 }}>{cat}</div>
+                      {items.map(item => (
+                        <div key={item.id} className="bar-ticket-line">
+                          <div className="bar-ticket-qty">×{item.qty}</div>
+                          <div className="bar-ticket-nom">{item.nom}</div>
+                          <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: "var(--muted)" }}>{item.desc}</div>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </>
+  );
+}
+
 export default function App() {
   const [page,setPage]=useState("dashboard");
   const [loading,setLoading]=useState(true);
   const [toast,setToast]=useState(null);
   const [data,setData]=useState({reservations:[],stock:[],taches:[],planning:[]});
   const [caJour,setCaJour]=useState(0);
+  // Tables state lifted here so Bar page can read it
+  const [tables,setTables]=useState(()=>
+    TABLES_CONFIG.map(t=>({...t,statut:"libre",commande:[],total:0,envoye:false,envoyeAt:null}))
+  );
 
   const showToast=(msg)=>{
     setToast(msg);
@@ -1077,10 +1188,12 @@ export default function App() {
     </div>
   );
 
+  const commandesEnAttente=tables.filter(t=>t.envoye&&t.commande.length>0).length;
+
   const nav=[
     {id:"dashboard",icon:"🏠",label:"Dashboard"},
     {id:"tables",icon:"🟢",label:"Tables"},
-    {id:"reservations",icon:"📋",label:"Réserv."},
+    {id:"bar",icon:"🍹",label:"Bar",badge:commandesEnAttente},
     {id:"stock",icon:"📦",label:"Stock"},
     {id:"taches",icon:"✅",label:"Tâches"},
   ];
@@ -1097,7 +1210,8 @@ export default function App() {
         {toast&&<div className="toast">{toast}</div>}
         <div className="scroll-area">
           {page==="dashboard"&&<Dashboard data={data} onNav={setPage} caJour={caJour}/>}
-          {page==="tables"&&<Tables data={data} setData={setData} showToast={showToast} caJour={caJour} setCaJour={setCaJour}/>}
+          {page==="tables"&&<Tables data={data} setData={setData} showToast={showToast} caJour={caJour} setCaJour={setCaJour} tables={tables} setTables={setTables}/>}
+          {page==="bar"&&<Bar tables={tables}/>}
           {page==="stock"&&<Stock data={data} setData={setData} showToast={showToast}/>}
           {page==="reservations"&&<Reservations data={data} setData={setData} showToast={showToast}/>}
           {page==="taches"&&<Taches data={data} setData={setData} showToast={showToast}/>}
@@ -1105,8 +1219,13 @@ export default function App() {
         </div>
         <div className="bottom-nav">
           {nav.map(n=>(
-            <div key={n.id} className={`nav-item ${page===n.id?"active":""}`} onClick={()=>setPage(n.id)}>
+            <div key={n.id} className={`nav-item ${page===n.id?"active":""}`} onClick={()=>setPage(n.id)} style={{position:"relative"}}>
               <span className="nav-icon">{n.icon}</span>
+              {n.badge>0&&(
+                <div style={{position:"absolute",top:4,right:8,width:16,height:16,background:"#e74c3c",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'DM Mono',monospace",fontSize:9,fontWeight:700,color:"#fff",border:"1.5px solid var(--bg)"}}>
+                  {n.badge}
+                </div>
+              )}
               <span className="nav-label">{n.label}</span>
             </div>
           ))}
