@@ -494,6 +494,27 @@ function Dashboard({data,onNav,caJour}) {
           </div>
         </>
       )}
+
+      {/* Accès rapide Planning */}
+      <div style={{padding:"4px 24px 24px"}}>
+        <div onClick={()=>onNav("planning")} style={{
+          display:"flex",alignItems:"center",justifyContent:"space-between",
+          background:"var(--surface)",border:"1px solid var(--border)",borderRadius:14,
+          padding:"14px 16px",cursor:"pointer",transition:"border-color .2s"
+        }}
+        onMouseEnter={e=>e.currentTarget.style.borderColor="var(--olive-dim)"}
+        onMouseLeave={e=>e.currentTarget.style.borderColor="var(--border)"}
+        >
+          <div style={{display:"flex",alignItems:"center",gap:12}}>
+            <div style={{width:36,height:36,background:"var(--surface2)",border:"1px solid var(--border)",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>📅</div>
+            <div>
+              <div style={{fontSize:13,fontWeight:700,color:"var(--cream)"}}>Planning équipe</div>
+              <div style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:"var(--muted)",marginTop:2}}>{data.planning.length} shift{data.planning.length!==1?"s":""} planifiés</div>
+            </div>
+          </div>
+          <span style={{color:"var(--muted)",fontSize:18}}>›</span>
+        </div>
+      </div>
     </>
   );
 }
