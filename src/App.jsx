@@ -434,25 +434,18 @@ function Dashboard({data,onNav,caJour}) {
             <div className="kpi-value">{data.taches.length-tachesRestantes.length}<span style={{fontSize:14,color:"var(--muted)"}}>/{data.taches.length}</span></div>
             <div className={`kpi-sub ${tachesRestantes.length>3?"warn":""}`}>{tachesRestantes.length} restantes</div>
           </div>
-          <div className="kpi-card" onClick={()=>onNav("stock")}>
-            <span className="kpi-icon">📦</span>
-            <div className="kpi-label">Stock</div>
-            <div className="kpi-value" style={{fontSize:alertes.length>0?"20px":"26px",color:alertes.length>0?"#e74c3c":"var(--cream)"}}>
-              {alertes.length>0?`⚠️ ${alertes.length}`:"OK"}
+          {/* CA du jour — 4ème carré */}
+          <div className="kpi-card" onClick={()=>onNav("tables")} style={{position:"relative",overflow:"hidden"}}>
+            <span className="kpi-icon">💰</span>
+            <div className="kpi-label">CA du jour</div>
+            <div className="kpi-value" style={{fontSize:caJour>=1000?"18px":"26px",color:caJour>=200?"var(--olive-bright)":"var(--cream)"}}>{caJour.toFixed(0)}€</div>
+            <div className={`kpi-sub ${caJour>=200?"":"" }`} style={{color:caJour>=200?"var(--olive-bright)":"var(--muted)"}}>
+              {caJour>=200?"✓ Objectif !":caJour>0?`-${(200-caJour).toFixed(0)}€`:"Objectif 200€"}
             </div>
-            <div className={`kpi-sub ${alertes.length>0?"danger":""}`}>{alertes.length>0?"alertes bas":"tout ok"}</div>
+            {/* mini barre en fond */}
+            <div style={{position:"absolute",bottom:0,left:0,height:3,width:`${Math.min((caJour/200)*100,100)}%`,background:"linear-gradient(90deg,var(--olive-dim),var(--olive-bright))",borderRadius:"0 2px 0 0",transition:"width .8s ease"}}/>
           </div>
         </div>
-      </div>
-
-      {/* CA du jour */}
-      <div className="ca-bar-wrap" onClick={()=>onNav("tables")} style={{cursor:"pointer"}}>
-        <div className="ca-bar-top">
-          <div className="ca-bar-label">💰 CA du jour</div>
-          <div className="ca-bar-value">{caJour.toFixed(2)}€</div>
-        </div>
-        <div className="ca-bar-track"><div className="ca-bar-fill" style={{width:`${Math.min((caJour/200)*100,100)}%`}}/></div>
-        <div className="ca-bar-sub"><span>Objectif 200€</span><span style={{color:caJour>=200?"var(--olive-bright)":"var(--muted)"}}>{caJour>=200?"✓ Atteint !":caJour>0?`${(200-caJour).toFixed(0)}€ restants`:"Ouvrir une table →"}</span></div>
       </div>
 
       {/* Alertes stock — seulement si problème */}
@@ -495,26 +488,7 @@ function Dashboard({data,onNav,caJour}) {
         </>
       )}
 
-      {/* Accès rapide Planning */}
-      <div style={{padding:"4px 24px 24px"}}>
-        <div onClick={()=>onNav("planning")} style={{
-          display:"flex",alignItems:"center",justifyContent:"space-between",
-          background:"var(--surface)",border:"1px solid var(--border)",borderRadius:14,
-          padding:"14px 16px",cursor:"pointer",transition:"border-color .2s"
-        }}
-        onMouseEnter={e=>e.currentTarget.style.borderColor="var(--olive-dim)"}
-        onMouseLeave={e=>e.currentTarget.style.borderColor="var(--border)"}
-        >
-          <div style={{display:"flex",alignItems:"center",gap:12}}>
-            <div style={{width:36,height:36,background:"var(--surface2)",border:"1px solid var(--border)",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>📅</div>
-            <div>
-              <div style={{fontSize:13,fontWeight:700,color:"var(--cream)"}}>Planning équipe</div>
-              <div style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:"var(--muted)",marginTop:2}}>{data.planning.length} shift{data.planning.length!==1?"s":""} planifiés</div>
-            </div>
-          </div>
-          <span style={{color:"var(--muted)",fontSize:18}}>›</span>
-        </div>
-      </div>
+
     </>
   );
 }
@@ -902,11 +876,14 @@ function Tables({ data, setData, showToast, caJour, setCaJour, tables, setTables
     // Déduire le stock pour chaque item commandé
     selectedT.commande.forEach(item => {
       if (item.stockProduit) {
-        const idx = data.stock.findIndex(s => s.produit === item.stockProduit);
+        // Comparaison insensible à la casse + trim pour éviter les mismatches
+        const needle = item.stockProduit.trim().toLowerCase();
+        const idx = data.stock.findIndex(s => s.produit && s.produit.trim().toLowerCase() === needle);
         if (idx !== -1) {
           const newQty = Math.max(0, Number(data.stock[idx].quantite) - item.qty);
+          const realNom = data.stock[idx].produit;
           setData(d => ({ ...d, stock: d.stock.map((s, i) => i === idx ? { ...s, quantite: newQty } : s) }));
-          apiCall({ sheet: "Stock", action: "update", rowId: item.stockProduit, searchCol: "produit", data: { quantite: newQty } });
+          apiCall({ sheet: "Stock", action: "update", rowId: realNom, searchCol: "produit", data: { quantite: newQty } });
         }
       }
     });
@@ -1216,7 +1193,7 @@ export default function App() {
     {id:"tables",icon:"🟢",label:"Tables"},
     {id:"bar",icon:"🍹",label:"Bar",badge:commandesEnAttente},
     {id:"stock",icon:"📦",label:"Stock"},
-    {id:"taches",icon:"✅",label:"Tâches"},
+    {id:"planning",icon:"📅",label:"Planning"},
   ];
 
   return(
