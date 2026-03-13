@@ -841,21 +841,21 @@ function Planning({data,setData,showToast}) {
 // ─── MENU DATA ─────────────────────────────────────────────────────────────
 const MENU = [
   // Bières
-  { id:"b1", cat:"Bières", nom:"Heineken", desc:"33cl bouteille", prix:4.5, stockProduit:"Bière Heineken" },
-  { id:"b2", cat:"Bières", nom:"Chouffe", desc:"33cl bouteille", prix:5.5, stockProduit:"Bière Chouffe" },
-  { id:"b3", cat:"Bières", nom:"IPA Locale", desc:"33cl bouteille", prix:5.5, stockProduit:"Bière IPA" },
+  { id:"b1", cat:"Bières", nom:"Heineken", desc:"33cl bouteille", prix:4.5, stockProduit:"Heineken" },
+  { id:"b2", cat:"Bières", nom:"Chouffe", desc:"33cl bouteille", prix:5.5, stockProduit:null },
+  { id:"b3", cat:"Bières", nom:"IPA Locale", desc:"33cl bouteille", prix:5.5, stockProduit:null },
   { id:"b4", cat:"Bières", nom:"Bière pression", desc:"25cl", prix:4.0, stockProduit:null },
   // Cocktails
-  { id:"c1", cat:"Cocktails", nom:"Mojito", desc:"Rhum, menthe, citron", prix:9.0, stockProduit:"Rhum" },
-  { id:"c2", cat:"Cocktails", nom:"Sex on the Beach", desc:"Vodka, pêche, jus", prix:9.0, stockProduit:"Vodka Grey Goose" },
-  { id:"c3", cat:"Cocktails", nom:"Daïquiri Fraise", desc:"Rhum, fraise, citron", prix:9.0, stockProduit:"Rhum" },
+  { id:"c1", cat:"Cocktails", nom:"Mojito", desc:"Rhum, menthe, citron", prix:9.0, stockProduit:"Poliakov" },
+  { id:"c2", cat:"Cocktails", nom:"Sex on the Beach", desc:"Vodka, pêche, jus", prix:9.0, stockProduit:"Poliakov" },
+  { id:"c3", cat:"Cocktails", nom:"Daïquiri Fraise", desc:"Rhum, fraise, citron", prix:9.0, stockProduit:null },
   { id:"c4", cat:"Cocktails", nom:"Spritz", desc:"Aperol, Prosecco", prix:8.0, stockProduit:null },
-  { id:"c5", cat:"Cocktails", nom:"Gin Tonic", desc:"Gin Hendrick's, Tonic", prix:10.0, stockProduit:"Gin Hendrick's" },
+  { id:"c5", cat:"Cocktails", nom:"Gin Tonic", desc:"Citron, Tonic", prix:10.0, stockProduit:"Citron" },
   // Softs
-  { id:"s1", cat:"Softs", nom:"Coca Cola", desc:"33cl", prix:3.0, stockProduit:null },
-  { id:"s2", cat:"Softs", nom:"Eau plate", desc:"50cl", prix:2.5, stockProduit:null },
-  { id:"s3", cat:"Softs", nom:"Jus d'orange", desc:"25cl frais", prix:3.5, stockProduit:null },
-  { id:"s4", cat:"Softs", nom:"Tonic", desc:"Fever-Tree", prix:4.0, stockProduit:"Tonic Fever-Tree" },
+  { id:"s1", cat:"Softs", nom:"Coca-cola", desc:"33cl", prix:3.0, stockProduit:"Coca-cola" },
+  { id:"s2", cat:"Softs", nom:"Thé à la menthe", desc:"Théière", prix:4.0, stockProduit:"The à la mente" },
+  { id:"s3", cat:"Softs", nom:"Eau plate", desc:"50cl", prix:2.5, stockProduit:null },
+  { id:"s4", cat:"Softs", nom:"Jus d'orange", desc:"25cl frais", prix:3.5, stockProduit:null },
   // Manger
   { id:"m1", cat:"Manger", nom:"Planche charcuterie", desc:"Saucisson, coppa, jambon", prix:14.0, stockProduit:null },
   { id:"m2", cat:"Manger", nom:"Plat du jour", desc:"Selon ardoise", prix:13.0, stockProduit:null },
