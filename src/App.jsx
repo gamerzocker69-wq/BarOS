@@ -250,6 +250,42 @@ function AddStockModal({onClose,onAdd}) {
   );
 }
 
+
+function AddShiftModal({onClose,onAdd}) {
+  const employes=["Marius","Marie","Charlotte","Fanny","Thomas"];
+  const postes=["Manager","Bar","Service","Cuisine","Plonge"];
+  const [form,setForm]=useState({employe:employes[0],poste:postes[0],date:"",debut:"",fin:""});
+  const set=(k,v)=>setForm(f=>({...f,[k]:v}));
+  const submit=()=>{if(!form.date||!form.debut||!form.fin)return;onAdd({...form});onClose();};
+  return(
+    <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal">
+        <div className="modal-title">Ajouter un shift</div>
+        <div className="modal-sub">Planifier un employé</div>
+        <div className="modal-grid">
+          <div className="field"><label>Employé</label>
+            <select value={form.employe} onChange={e=>set("employe",e.target.value)}>
+              {employes.map(e=><option key={e}>{e}</option>)}
+            </select>
+          </div>
+          <div className="field"><label>Poste</label>
+            <select value={form.poste} onChange={e=>set("poste",e.target.value)}>
+              {postes.map(p=><option key={p}>{p}</option>)}
+            </select>
+          </div>
+        </div>
+        <div className="field"><label>Date</label><input type="date" value={form.date} onChange={e=>set("date",e.target.value)}/></div>
+        <div className="modal-grid">
+          <div className="field"><label>Début</label><input type="time" value={form.debut} onChange={e=>set("debut",e.target.value)}/></div>
+          <div className="field"><label>Fin</label><input type="time" value={form.fin} onChange={e=>set("fin",e.target.value)}/></div>
+        </div>
+        <button className="btn-primary" onClick={submit}>Ajouter le shift</button>
+        <button className="btn-cancel" onClick={onClose}>Annuler</button>
+      </div>
+    </div>
+  );
+}
+
 function AddTacheModal({onClose,onAdd}) {
   const [form,setForm]=useState({titre:"",categorie:"Service",statut:"À faire",assigne:"",deadline:"",notes:""});
   const set=(k,v)=>setForm(f=>({...f,[k]:v}));
@@ -281,8 +317,11 @@ function Dashboard({data,onNav}) {
   const today=new Date().toISOString().split("T")[0];
   const alertes=data.stock.filter(s=>Number(s.quantite)<=Number(s.seuil));
   const resasSoir=data.reservations.filter(r=>r.date===today);
+  const tachesUrgentes=data.taches.filter(t=>t.statut!=="Fait").slice(0,3);
   const tachesRestantes=data.taches.filter(t=>t.statut!=="Fait");
   const couverts=resasSoir.reduce((a,r)=>a+Number(r.couverts),0);
+  const resasConfirmees=resasSoir.filter(r=>r.statut==="Confirmée").length;
+  const resasAttente=resasSoir.filter(r=>r.statut==="En attente").length;
   return(
     <>
       <div className="header">
@@ -291,21 +330,25 @@ function Dashboard({data,onNav}) {
             <div className="greeting">Bonsoir, Marie et Marius 👋</div>
             <div className="logo">Bar<em>OS</em></div>
           </div>
-          <div className="notif-btn">🔔<div className="notif-dot"/></div>
+          <div className="notif-btn">🔔{(alertes.length>0||resasAttente>0)&&<div className="notif-dot"/>}</div>
         </div>
         <div className="date-pill"><span className="pulse-dot"/> {new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"})}</div>
       </div>
+
       <div className="section">
-        <div className="section-label">Vue d'ensemble</div>
+        <div className="section-label">Ce soir</div>
         <div className="kpi-grid">
           <div className="kpi-card featured" onClick={()=>onNav("reservations")}>
             <div className="kpi-glow"/>
             <div>
-              <div className="kpi-label">Réservations ce soir</div>
+              <div className="kpi-label">Réservations</div>
               <div className="kpi-value">{resasSoir.length}</div>
-              <div className="kpi-badge">{resasSoir.filter(r=>r.statut==="Confirmée").length} confirmées</div>
+              <div style={{display:"flex",gap:6,marginTop:8,flexWrap:"wrap"}}>
+                <div className="kpi-badge">✓ {resasConfirmees} confirmées</div>
+                {resasAttente>0&&<div className="kpi-badge" style={{background:"rgba(201,168,76,.15)",borderColor:"rgba(201,168,76,.3)",color:"var(--gold)"}}>⏳ {resasAttente} attente</div>}
+              </div>
             </div>
-            <div style={{fontSize:48,opacity:.5}}>🍽️</div>
+            <div style={{fontSize:42,opacity:.4}}>🍽️</div>
           </div>
           <div className="kpi-card" onClick={()=>onNav("reservations")}>
             <span className="kpi-icon">👥</span>
@@ -329,54 +372,46 @@ function Dashboard({data,onNav}) {
           </div>
         </div>
       </div>
+
+      {/* Alertes stock — seulement si problème */}
       {alertes.length>0&&(
         <div className="stock-alert" onClick={()=>onNav("stock")}>
           <div className="alert-icon">⚠️</div>
           <div style={{flex:1}}>
-            <div className="alert-title">Stock critique</div>
+            <div className="alert-title">Stock critique — commander maintenant</div>
             <div className="alert-sub">{alertes.map(a=>a.produit).join(" · ")}</div>
           </div>
           <span style={{color:"var(--muted)",fontSize:16}}>›</span>
         </div>
       )}
-      <div className="divider"><div className="divider-line"/><div className="divider-label">Réservations</div><div className="divider-line"/></div>
-      <div className="section">
-        <div className="section-header">
-          <div className="section-label" style={{margin:0}}>Ce soir</div>
-          <span className="see-all" onClick={()=>onNav("reservations")}>Tout voir →</span>
-        </div>
-        {resasSoir.length===0&&<div className="empty">Aucune réservation ce soir</div>}
-        {resasSoir.slice(0,3).map((r,i)=>(
-          <div key={i} className="resa-card" style={{animationDelay:`${i*.07}s`}}>
-            <div className="resa-time">{r.heure}</div>
-            <div className="resa-div"/>
-            <div className="resa-info">
-              <div className="resa-name">{r.nom}</div>
-              <div className="resa-details">{r.couverts} pers. · {r.statut}</div>
+
+      {/* Tâches urgentes — max 3, seulement "À faire" */}
+      {tachesUrgentes.length>0&&(
+        <>
+          <div className="divider"><div className="divider-line"/><div className="divider-label">Urgent</div><div className="divider-line"/></div>
+          <div className="section" style={{paddingBottom:20}}>
+            <div className="section-header">
+              <div className="section-label" style={{margin:0}}>Tâches à faire</div>
+              <span className="see-all" onClick={()=>onNav("taches")}>Tout voir →</span>
             </div>
-            <div style={{display:"flex",flexDirection:"column",gap:4,alignItems:"flex-end"}}>
-              <span className={getTagClass(r.type)}>{r.type?r.type.split(" ")[0]:""}</span>
-              <span className={getStatutClass(r.statut)}>{r.statut}</span>
-            </div>
+            {tachesUrgentes.map((t,i)=>(
+              <div key={i} className="task-card">
+                <div className="task-check"/>
+                <div style={{flex:1}}>
+                  <div className="task-title">{t.titre}</div>
+                  <div className="task-meta">{t.assigne&&`${t.assigne} · `}{t.categorie}</div>
+                </div>
+                <span style={{fontFamily:"'DM Mono',monospace",fontSize:9,padding:"3px 8px",borderRadius:100,background:"var(--surface2)",border:"1px solid var(--border)",color:"var(--muted)"}}>{t.categorie}</span>
+              </div>
+            ))}
+            {tachesRestantes.length>3&&(
+              <div style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:"var(--olive-bright)",textAlign:"center",padding:"8px 0",cursor:"pointer"}} onClick={()=>onNav("taches")}>
+                + {tachesRestantes.length-3} autres tâches →
+              </div>
+            )}
           </div>
-        ))}
-      </div>
-      <div className="divider"><div className="divider-line"/><div className="divider-label">Tâches</div><div className="divider-line"/></div>
-      <div className="section" style={{paddingBottom:20}}>
-        <div className="section-header">
-          <div className="section-label" style={{margin:0}}>Aujourd'hui</div>
-          <span className="see-all" onClick={()=>onNav("taches")}>Tout voir →</span>
-        </div>
-        {data.taches.slice(0,3).map((t,i)=>(
-          <div key={i} className="task-card">
-            <div className={`task-check ${t.statut==="Fait"?"done":""}`}>{t.statut==="Fait"?"✓":""}</div>
-            <div style={{flex:1}}>
-              <div className={`task-title ${t.statut==="Fait"?"done":""}`}>{t.titre}</div>
-              <div className="task-meta">{t.assigne} · {t.categorie}</div>
-            </div>
-          </div>
-        ))}
-      </div>
+        </>
+      )}
     </>
   );
 }
@@ -384,6 +419,8 @@ function Dashboard({data,onNav}) {
 function Stock({data,setData,showToast}) {
   const [modal,setModal]=useState(false);
   const [filtre,setFiltre]=useState("Tout");
+  const [editingProduit,setEditingProduit]=useState(null);
+  const [editVal,setEditVal]=useState("");
   const cats=["Tout","Boissons alcoolisées","Softs","Nourriture","Matériel","Consommables"];
   const filtered=filtre==="Tout"?data.stock:data.stock.filter(s=>s.categorie===filtre);
   const alertes=data.stock.filter(s=>Number(s.quantite)<=Number(s.seuil));
@@ -402,6 +439,23 @@ function Stock({data,setData,showToast}) {
     setData(d=>({...d,stock:d.stock.map((s,i)=>i===idx?{...s,quantite:newQty}:s)}));
     await apiCall({sheet:"Stock",action:"update",rowId:produit,searchCol:"produit",data:{quantite:newQty}});
     showToast(`${produit} → ${newQty} ${item.unite}`);
+  };
+
+  const startEdit=(produit,current)=>{
+    setEditingProduit(produit);
+    setEditVal(String(current));
+  };
+
+  const confirmEdit=async(produit)=>{
+    const val=parseInt(editVal,10);
+    if(isNaN(val)||val<0){setEditingProduit(null);return;}
+    const idx=data.stock.findIndex(s=>s.produit===produit);
+    if(idx===-1){setEditingProduit(null);return;}
+    const item=data.stock[idx];
+    setData(d=>({...d,stock:d.stock.map((s,i)=>i===idx?{...s,quantite:val}:s)}));
+    setEditingProduit(null);
+    await apiCall({sheet:"Stock",action:"update",rowId:produit,searchCol:"produit",data:{quantite:val}});
+    showToast(`${produit} → ${val} ${item.unite}`);
   };
 
   return(
@@ -430,18 +484,36 @@ function Stock({data,setData,showToast}) {
           const isLow=Number(s.quantite)<=Number(s.seuil);
           const ratio=Math.min(Number(s.quantite)/(Number(s.seuil)*2||1),1);
           const barColor=isLow?"#e74c3c":Number(s.quantite)<=Number(s.seuil)*1.2?var_gold():"#aabf38";
+          const isEditing=editingProduit===s.produit;
           return(
             <div key={i} className={`stock-item ${isLow?"alert":""}`}>
               <div className="stock-icon">{getCatEmoji(s.categorie)}</div>
               <div className="stock-info">
                 <div className="stock-name">{s.produit}</div>
-                <div className="stock-cat">{s.categorie} · {s.fournisseur}</div>
+                <div className="stock-cat">{s.categorie}{s.fournisseur?` · ${s.fournisseur}`:""}</div>
                 <div className="stock-bar"><div className="stock-bar-fill" style={{width:`${ratio*100}%`,background:barColor}}/></div>
               </div>
               <div className="stock-qty">
                 <div className="qty-btns">
                   <div className="qty-btn" onClick={()=>updateQty(s.produit,-1)}>−</div>
-                  <div className={`stock-num ${isLow?"low":""}`}>{s.quantite}</div>
+                  {isEditing?(
+                    <input
+                      type="number"
+                      value={editVal}
+                      onChange={e=>setEditVal(e.target.value)}
+                      onBlur={()=>confirmEdit(s.produit)}
+                      onKeyDown={e=>{if(e.key==="Enter")confirmEdit(s.produit);if(e.key==="Escape")setEditingProduit(null);}}
+                      autoFocus
+                      style={{width:44,background:"var(--bg)",border:"1px solid var(--olive)",borderRadius:8,color:"var(--cream)",fontFamily:"'DM Mono',monospace",fontSize:14,textAlign:"center",padding:"2px 4px",outline:"none"}}
+                    />
+                  ):(
+                    <div
+                      className={`stock-num ${isLow?"low":""}`}
+                      onClick={()=>startEdit(s.produit,s.quantite)}
+                      title="Cliquer pour modifier"
+                      style={{cursor:"pointer",borderBottom:"1px dashed var(--border)",minWidth:28,textAlign:"center"}}
+                    >{s.quantite}</div>
+                  )}
                   <div className="qty-btn" onClick={()=>updateQty(s.produit,1)}>+</div>
                 </div>
                 <div className="stock-unit">{s.unite}</div>
@@ -578,16 +650,65 @@ function Taches({data,setData,showToast}) {
   );
 }
 
-function Planning({data}) {
-  const days=[...new Set(data.planning.map(p=>p.date))].sort();
-  const postes={"Manager":"🎯","Bar":"🍹","Service":"🍽️","Cuisine":"👨‍🍳"};
+function Planning({data,setData,showToast}) {
+  const [modal,setModal]=useState(false);
+  const [filterDate,setFilterDate]=useState("");
+  const postes={"Manager":"🎯","Bar":"🍹","Service":"🍽️","Cuisine":"👨‍🍳","Plonge":"🪣"};
+
+  const allDays=[...new Set(data.planning.map(p=>p.date))].sort();
+  const days=filterDate?allDays.filter(d=>d===filterDate):allDays;
+
+  const addShift=async(shift)=>{
+    await apiCall({sheet:"Planning",action:"add",data:shift});
+    setData(d=>({...d,planning:[...d.planning,shift]}));
+    showToast(`${shift.employe} ajouté ✓`);
+  };
+
+  const deleteShift=async(employe,date,debut)=>{
+    setData(d=>({...d,planning:d.planning.filter(p=>!(p.employe===employe&&p.date===date&&p.debut===debut))}));
+    await apiCall({sheet:"Planning",action:"delete",rowId:employe,searchCol:"employe"});
+    showToast("Shift supprimé");
+  };
+
+  // Résumé par employé
+  const employes=["Marius","Marie","Charlotte","Fanny","Thomas"];
+  const shiftsParEmploye=employes.map(e=>({
+    nom:e,
+    shifts:data.planning.filter(p=>p.employe===e).length,
+    heures:data.planning.filter(p=>p.employe===e).reduce((acc,p)=>{
+      try{const [dh,dm]=p.debut.split(":").map(Number);const [fh,fm]=p.fin.split(":").map(Number);let diff=(fh*60+fm)-(dh*60+dm);if(diff<0)diff+=24*60;return acc+diff/60;}catch{return acc;}
+    },0)
+  }));
+
   return(
     <>
       <div className="page-header">
-        <div><div className="page-title">Planning</div><div className="page-count">{data.planning.length} shifts</div></div>
+        <div><div className="page-title">Planning</div><div className="page-count">{data.planning.length} shifts planifiés</div></div>
       </div>
+
+      {/* Résumé équipe */}
+      <div style={{padding:"14px 24px 0",display:"flex",gap:8,overflowX:"auto",scrollbarWidth:"none"}}>
+        {shiftsParEmploye.map(e=>(
+          <div key={e.nom} style={{flexShrink:0,background:"var(--surface)",border:"1px solid var(--border)",borderRadius:12,padding:"10px 14px",minWidth:90,textAlign:"center",cursor:"pointer",transition:"border-color .2s"}}
+            onClick={()=>setFilterDate(filterDate===""?data.planning.find(p=>p.employe===e.nom)?.date||"":"")}
+          >
+            <div style={{width:32,height:32,borderRadius:10,background:getAvatarColor(e.nom)+"22",border:`1px solid ${getAvatarColor(e.nom)}44`,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 6px",fontWeight:700,color:getAvatarColor(e.nom)}}>{e.nom[0]}</div>
+            <div style={{fontSize:12,fontWeight:700,color:"var(--cream)"}}>{e.nom}</div>
+            <div style={{fontFamily:"'DM Mono',monospace",fontSize:9,color:"var(--muted)",marginTop:2}}>{e.shifts} shift{e.shifts!==1?"s":""} · {e.heures.toFixed(0)}h</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Filtre date */}
+      <div style={{padding:"12px 24px 0",display:"flex",gap:8,alignItems:"center"}}>
+        <input type="date" value={filterDate} onChange={e=>setFilterDate(e.target.value)}
+          style={{background:"var(--surface)",border:"1px solid var(--border)",borderRadius:10,padding:"7px 12px",color:"var(--cream)",fontFamily:"'DM Mono',monospace",fontSize:11,outline:"none",flex:1}}
+        />
+        {filterDate&&<div onClick={()=>setFilterDate("")} style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:"var(--muted)",cursor:"pointer",padding:"7px 12px",background:"var(--surface)",border:"1px solid var(--border)",borderRadius:10}}>✕ Tout</div>}
+      </div>
+
       <div style={{paddingTop:14}}>
-        {days.length===0&&<div className="empty">Aucun shift planifié</div>}
+        {days.length===0&&<div className="empty">Aucun shift{filterDate?" ce jour-là":""}</div>}
         {days.map(day=>(
           <div key={day} className="planning-day">
             <div className="planning-date">{formatDate(day)}</div>
@@ -601,11 +722,14 @@ function Planning({data}) {
                   <div className="shift-poste">{postes[p.poste]||"👤"} {p.poste}</div>
                 </div>
                 <div className="shift-hours">{p.debut} – {p.fin}</div>
+                <div className="task-del" onClick={()=>deleteShift(p.employe,p.date,p.debut)}>🗑</div>
               </div>
             ))}
           </div>
         ))}
       </div>
+      {modal&&<AddShiftModal onClose={()=>setModal(false)} onAdd={addShift}/>}
+      <div className="fab" onClick={()=>setModal(true)}>+</div>
     </>
   );
 }
@@ -672,7 +796,7 @@ export default function App() {
           {page==="stock"&&<Stock data={data} setData={setData} showToast={showToast}/>}
           {page==="reservations"&&<Reservations data={data} setData={setData} showToast={showToast}/>}
           {page==="taches"&&<Taches data={data} setData={setData} showToast={showToast}/>}
-          {page==="planning"&&<Planning data={data}/>}
+          {page==="planning"&&<Planning data={data} setData={setData} showToast={showToast}/>}
         </div>
         <div className="bottom-nav">
           {nav.map(n=>(
