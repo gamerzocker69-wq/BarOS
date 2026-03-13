@@ -146,6 +146,63 @@ const css = `
   .page-count { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); margin-top:2px; }
   .toast { position:absolute; top:70px; left:50%; transform:translateX(-50%); background:var(--olive-bright); color:#000; font-family:'DM Mono',monospace; font-size:11px; padding:8px 18px; border-radius:100px; z-index:200; white-space:nowrap; animation:slideUp .3s ease; font-weight:700; box-shadow:0 4px 20px rgba(138,154,46,.4); }
   .empty { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); text-align:center; padding:24px 0; }
+  /* ── TABLES ── */
+  .tables-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:16px 24px 0; }
+  .table-card { border-radius:18px; padding:16px 14px; cursor:pointer; transition:all .25s; position:relative; overflow:hidden; border:1.5px solid transparent; animation:slideUp .3s ease both; }
+  .table-card.libre { background:var(--surface); border-color:var(--border); }
+  .table-card.libre:hover { border-color:var(--olive-dim); transform:translateY(-2px); }
+  .table-card.encours { background:linear-gradient(135deg,#1e1a08,#2a2410); border-color:rgba(201,168,76,.4); }
+  .table-card.encours:hover { border-color:var(--gold); transform:translateY(-2px); }
+  .table-card.apayer { background:linear-gradient(135deg,#1a0f0f,#220d0d); border-color:rgba(192,57,43,.5); }
+  .table-status-dot { width:8px; height:8px; border-radius:50%; margin-bottom:10px; }
+  .dot-libre { background:var(--olive-bright); }
+  .dot-encours { background:var(--gold); }
+  .dot-apayer { background:#e74c3c; }
+  .table-name { font-size:15px; font-weight:800; color:var(--cream); margin-bottom:2px; }
+  .table-info { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); }
+  .table-total { font-family:'DM Mono',monospace; font-size:13px; font-weight:600; color:var(--gold); margin-top:8px; }
+  .table-zone-label { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); padding:14px 24px 6px; }
+  .commande-header { padding:16px 24px 14px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px; }
+  .back-btn { width:36px; height:36px; background:var(--surface); border:1px solid var(--border); border-radius:11px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:16px; transition:border-color .2s; flex-shrink:0; }
+  .back-btn:hover { border-color:var(--olive); }
+  .commande-table-name { font-family:'DM Serif Display',serif; font-size:22px; color:var(--cream); }
+  .commande-table-status { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); }
+  .menu-cats { display:flex; gap:8px; overflow-x:auto; padding:12px 24px; scrollbar-width:none; border-bottom:1px solid var(--border); }
+  .menu-cats::-webkit-scrollbar { display:none; }
+  .menu-cat-btn { flex-shrink:0; padding:7px 14px; border-radius:100px; font-family:'DM Mono',monospace; font-size:11px; cursor:pointer; transition:all .2s; white-space:nowrap; background:var(--surface); border:1px solid var(--border); color:var(--muted); }
+  .menu-cat-btn.active { background:rgba(138,154,46,.15); border-color:var(--olive-dim); color:var(--olive-bright); }
+  .menu-items { padding:10px 24px 0; }
+  .menu-item { display:flex; align-items:center; justify-content:space-between; padding:12px 14px; background:var(--surface); border:1px solid var(--border); border-radius:14px; margin-bottom:8px; cursor:pointer; transition:all .2s; gap:10px; }
+  .menu-item:hover { border-color:var(--olive-dim); background:var(--surface2); }
+  .menu-item-info { flex:1; }
+  .menu-item-name { font-size:13px; font-weight:600; color:var(--cream); }
+  .menu-item-desc { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); margin-top:1px; }
+  .menu-item-right { display:flex; align-items:center; gap:10px; }
+  .menu-item-price { font-family:'DM Mono',monospace; font-size:14px; font-weight:600; color:var(--olive-bright); }
+  .menu-item-add { width:28px; height:28px; background:var(--olive-bright); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:20px; color:#000; font-weight:300; flex-shrink:0; }
+  .ticket { background:var(--surface2); border-top:1px solid var(--border); padding:14px 24px; }
+  .ticket-title { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+  .ticket-line { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+  .ticket-qty { font-family:'DM Mono',monospace; font-size:11px; color:var(--olive-bright); min-width:20px; }
+  .ticket-item-name { font-size:12px; color:var(--cream); flex:1; }
+  .ticket-item-price { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); }
+  .ticket-remove { font-size:16px; color:var(--muted); cursor:pointer; padding:0 2px; transition:color .2s; }
+  .ticket-remove:hover { color:#e74c3c; }
+  .ticket-total { display:flex; justify-content:space-between; align-items:center; padding-top:10px; margin-top:6px; border-top:1px solid var(--border); }
+  .ticket-total-label { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); }
+  .ticket-total-amount { font-family:'DM Mono',monospace; font-size:20px; font-weight:700; color:var(--cream); }
+  .commande-actions { display:flex; gap:8px; padding:12px 24px 16px; }
+  .btn-envoyer { flex:1; padding:13px; background:var(--olive-bright); border:none; border-radius:14px; color:#000; font-family:'Syne',sans-serif; font-size:14px; font-weight:700; cursor:pointer; transition:all .2s; }
+  .btn-envoyer:hover { background:#c0d840; }
+  .btn-encaisser { flex:1; padding:13px; background:linear-gradient(135deg,#1a3a1a,#1e4a1e); border:1.5px solid rgba(138,154,46,.5); border-radius:14px; color:var(--olive-bright); font-family:'Syne',sans-serif; font-size:14px; font-weight:700; cursor:pointer; transition:all .2s; }
+  .btn-liberer { padding:13px 16px; background:var(--surface2); border:1px solid var(--border); border-radius:14px; color:var(--muted); font-family:'DM Mono',monospace; font-size:11px; cursor:pointer; transition:all .2s; }
+  .ca-bar-wrap { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px 16px; margin:14px 24px 0; }
+  .ca-bar-top { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; }
+  .ca-bar-label { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.1em; }
+  .ca-bar-value { font-family:'DM Mono',monospace; font-size:18px; font-weight:700; color:var(--cream); }
+  .ca-bar-track { height:6px; background:var(--border); border-radius:4px; overflow:hidden; }
+  .ca-bar-fill { height:100%; border-radius:4px; background:linear-gradient(90deg,var(--olive-dim),var(--olive-bright)); transition:width .8s ease; }
+  .ca-bar-sub { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); margin-top:6px; display:flex; justify-content:space-between; }
 `;
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────
@@ -313,7 +370,7 @@ function AddTacheModal({onClose,onAdd}) {
 }
 
 // ─── PAGES ────────────────────────────────────────────────────────────────
-function Dashboard({data,onNav}) {
+function Dashboard({data,onNav,caJour}) {
   const today=new Date().toISOString().split("T")[0];
   const alertes=data.stock.filter(s=>Number(s.quantite)<=Number(s.seuil));
   const resasSoir=data.reservations.filter(r=>r.date===today);
@@ -371,6 +428,16 @@ function Dashboard({data,onNav}) {
             <div className={`kpi-sub ${alertes.length>0?"danger":""}`}>{alertes.length>0?"alertes bas":"tout ok"}</div>
           </div>
         </div>
+      </div>
+
+      {/* CA du jour */}
+      <div className="ca-bar-wrap" onClick={()=>onNav("tables")} style={{cursor:"pointer"}}>
+        <div className="ca-bar-top">
+          <div className="ca-bar-label">💰 CA du jour</div>
+          <div className="ca-bar-value">{caJour.toFixed(2)}€</div>
+        </div>
+        <div className="ca-bar-track"><div className="ca-bar-fill" style={{width:`${Math.min((caJour/500)*100,100)}%`}}/></div>
+        <div className="ca-bar-sub"><span>Objectif 500€</span><span style={{color:caJour>=500?"var(--olive-bright)":"var(--muted)"}}>{caJour>=500?"✓ Atteint !":caJour>0?`${(500-caJour).toFixed(0)}€ restants`:"Ouvrir une table →"}</span></div>
       </div>
 
       {/* Alertes stock — seulement si problème */}
@@ -734,16 +801,253 @@ function Planning({data,setData,showToast}) {
   );
 }
 
+
+// ─── MENU DATA ─────────────────────────────────────────────────────────────
+const MENU = [
+  // Bières
+  { id:"b1", cat:"Bières", nom:"Heineken", desc:"33cl bouteille", prix:4.5, stockProduit:"Bière Heineken" },
+  { id:"b2", cat:"Bières", nom:"Chouffe", desc:"33cl bouteille", prix:5.5, stockProduit:"Bière Chouffe" },
+  { id:"b3", cat:"Bières", nom:"IPA Locale", desc:"33cl bouteille", prix:5.5, stockProduit:"Bière IPA" },
+  { id:"b4", cat:"Bières", nom:"Bière pression", desc:"25cl", prix:4.0, stockProduit:null },
+  // Cocktails
+  { id:"c1", cat:"Cocktails", nom:"Mojito", desc:"Rhum, menthe, citron", prix:9.0, stockProduit:"Rhum" },
+  { id:"c2", cat:"Cocktails", nom:"Sex on the Beach", desc:"Vodka, pêche, jus", prix:9.0, stockProduit:"Vodka Grey Goose" },
+  { id:"c3", cat:"Cocktails", nom:"Daïquiri Fraise", desc:"Rhum, fraise, citron", prix:9.0, stockProduit:"Rhum" },
+  { id:"c4", cat:"Cocktails", nom:"Spritz", desc:"Aperol, Prosecco", prix:8.0, stockProduit:null },
+  { id:"c5", cat:"Cocktails", nom:"Gin Tonic", desc:"Gin Hendrick's, Tonic", prix:10.0, stockProduit:"Gin Hendrick's" },
+  // Softs
+  { id:"s1", cat:"Softs", nom:"Coca Cola", desc:"33cl", prix:3.0, stockProduit:null },
+  { id:"s2", cat:"Softs", nom:"Eau plate", desc:"50cl", prix:2.5, stockProduit:null },
+  { id:"s3", cat:"Softs", nom:"Jus d'orange", desc:"25cl frais", prix:3.5, stockProduit:null },
+  { id:"s4", cat:"Softs", nom:"Tonic", desc:"Fever-Tree", prix:4.0, stockProduit:"Tonic Fever-Tree" },
+  // Manger
+  { id:"m1", cat:"Manger", nom:"Planche charcuterie", desc:"Saucisson, coppa, jambon", prix:14.0, stockProduit:null },
+  { id:"m2", cat:"Manger", nom:"Plat du jour", desc:"Selon ardoise", prix:13.0, stockProduit:null },
+  { id:"m3", cat:"Manger", nom:"Frites maison", desc:"Portion", prix:5.0, stockProduit:null },
+  { id:"m4", cat:"Manger", nom:"Olives", desc:"Bol", prix:4.0, stockProduit:null },
+];
+
+const TABLES_CONFIG = [
+  // Salle
+  { id:"t1", nom:"Table 1", zone:"Salle" },
+  { id:"t2", nom:"Table 2", zone:"Salle" },
+  { id:"t3", nom:"Table 3", zone:"Salle" },
+  { id:"t4", nom:"Table 4", zone:"Salle" },
+  { id:"t5", nom:"Table 5", zone:"Salle" },
+  { id:"t6", nom:"Table 6", zone:"Salle" },
+  // Bar
+  { id:"bar1", nom:"Bar", zone:"Bar" },
+  { id:"bar2", nom:"Comptoir 2", zone:"Bar" },
+  // Terrasse
+  { id:"ter1", nom:"Terrasse 1", zone:"Terrasse" },
+  { id:"ter2", nom:"Terrasse 2", zone:"Terrasse" },
+];
+
+// ─── TABLES + COMMANDES ────────────────────────────────────────────────────
+function Tables({ data, setData, showToast, caJour, setCaJour }) {
+  const [selectedTable, setSelectedTable] = useState(null);
+  const [tables, setTables] = useState(() =>
+    TABLES_CONFIG.map(t => ({ ...t, statut: "libre", commande: [], total: 0 }))
+  );
+  const [menuCat, setMenuCat] = useState("Bières");
+  const cats = ["Bières", "Cocktails", "Softs", "Manger"];
+
+  const selectedT = selectedTable ? tables.find(t => t.id === selectedTable) : null;
+
+  const addToCommande = (item) => {
+    setTables(ts => ts.map(t => {
+      if (t.id !== selectedTable) return t;
+      const existing = t.commande.find(c => c.id === item.id);
+      const newCommande = existing
+        ? t.commande.map(c => c.id === item.id ? { ...c, qty: c.qty + 1 } : c)
+        : [...t.commande, { ...item, qty: 1 }];
+      const total = newCommande.reduce((s, c) => s + c.prix * c.qty, 0);
+      return { ...t, commande: newCommande, total, statut: "encours" };
+    }));
+  };
+
+  const removeFromCommande = (itemId) => {
+    setTables(ts => ts.map(t => {
+      if (t.id !== selectedTable) return t;
+      const newCommande = t.commande
+        .map(c => c.id === itemId ? { ...c, qty: c.qty - 1 } : c)
+        .filter(c => c.qty > 0);
+      const total = newCommande.reduce((s, c) => s + c.prix * c.qty, 0);
+      const statut = newCommande.length === 0 ? "libre" : t.statut;
+      return { ...t, commande: newCommande, total, statut };
+    }));
+  };
+
+  const envoyerCommande = () => {
+    if (!selectedT || selectedT.commande.length === 0) return;
+    showToast(`Commande envoyée — ${selectedT.nom} ✓`);
+    // Déduire le stock pour chaque item commandé
+    selectedT.commande.forEach(item => {
+      if (item.stockProduit) {
+        const idx = data.stock.findIndex(s => s.produit === item.stockProduit);
+        if (idx !== -1) {
+          const newQty = Math.max(0, Number(data.stock[idx].quantite) - item.qty);
+          setData(d => ({ ...d, stock: d.stock.map((s, i) => i === idx ? { ...s, quantite: newQty } : s) }));
+          apiCall({ sheet: "Stock", action: "update", rowId: item.stockProduit, searchCol: "produit", data: { quantite: newQty } });
+        }
+      }
+    });
+  };
+
+  const encaisser = () => {
+    if (!selectedT || selectedT.commande.length === 0) return;
+    const montant = selectedT.total;
+    setCaJour(ca => ca + montant);
+    setTables(ts => ts.map(t => t.id === selectedTable
+      ? { ...t, statut: "libre", commande: [], total: 0 }
+      : t
+    ));
+    showToast(`💰 ${montant.toFixed(2)}€ encaissé — ${selectedT.nom} libérée ✓`);
+    setSelectedTable(null);
+  };
+
+  const libererTable = () => {
+    setTables(ts => ts.map(t => t.id === selectedTable
+      ? { ...t, statut: "libre", commande: [], total: 0 }
+      : t
+    ));
+    setSelectedTable(null);
+    showToast("Table libérée");
+  };
+
+  // ── Vue commande d'une table ──
+  if (selectedT) {
+    const filteredMenu = MENU.filter(m => m.cat === menuCat);
+    const totalItems = selectedT.commande.reduce((s, c) => s + c.qty, 0);
+    return (
+      <>
+        <div className="commande-header">
+          <div className="back-btn" onClick={() => setSelectedTable(null)}>←</div>
+          <div>
+            <div className="commande-table-name">{selectedT.nom}</div>
+            <div className="commande-table-status">{selectedT.zone} · {totalItems} article{totalItems !== 1 ? "s" : ""}</div>
+          </div>
+          <div style={{ marginLeft: "auto", fontFamily: "'DM Mono',monospace", fontSize: 18, fontWeight: 700, color: selectedT.statut === "apayer" ? "#e74c3c" : "var(--cream)" }}>
+            {selectedT.total.toFixed(2)}€
+          </div>
+        </div>
+
+        <div className="menu-cats">
+          {cats.map(c => (
+            <div key={c} className={`menu-cat-btn ${menuCat === c ? "active" : ""}`} onClick={() => setMenuCat(c)}>{c}</div>
+          ))}
+        </div>
+
+        <div className="menu-items" style={{ paddingBottom: selectedT.commande.length > 0 ? 0 : 20 }}>
+          {filteredMenu.map(item => (
+            <div key={item.id} className="menu-item" onClick={() => addToCommande(item)}>
+              <div className="menu-item-info">
+                <div className="menu-item-name">{item.nom}</div>
+                <div className="menu-item-desc">{item.desc}</div>
+              </div>
+              <div className="menu-item-right">
+                <div className="menu-item-price">{item.prix.toFixed(2)}€</div>
+                <div className="menu-item-add">+</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {selectedT.commande.length > 0 && (
+          <>
+            <div className="ticket">
+              <div className="ticket-title">Ticket · {selectedT.nom}</div>
+              {selectedT.commande.map(item => (
+                <div key={item.id} className="ticket-line">
+                  <div className="ticket-qty">×{item.qty}</div>
+                  <div className="ticket-item-name">{item.nom}</div>
+                  <div className="ticket-item-price">{(item.prix * item.qty).toFixed(2)}€</div>
+                  <div className="ticket-remove" onClick={() => removeFromCommande(item.id)}>✕</div>
+                </div>
+              ))}
+              <div className="ticket-total">
+                <div className="ticket-total-label">Total</div>
+                <div className="ticket-total-amount">{selectedT.total.toFixed(2)}€</div>
+              </div>
+            </div>
+            <div className="commande-actions">
+              <div className="btn-liberer" onClick={libererTable}>🗑 Vider</div>
+              <div className="btn-envoyer" onClick={envoyerCommande}>📤 Envoyer</div>
+              <div className="btn-encaisser" onClick={encaisser}>💰 Encaisser</div>
+            </div>
+          </>
+        )}
+      </>
+    );
+  }
+
+  // ── Vue grille des tables ──
+  const zones = [...new Set(TABLES_CONFIG.map(t => t.zone))];
+  const tablesOccupees = tables.filter(t => t.statut !== "libre").length;
+  const caTotal = tables.reduce((s, t) => s + t.total, 0);
+
+  return (
+    <>
+      <div className="page-header">
+        <div>
+          <div className="page-title">Tables</div>
+          <div className="page-count">{tablesOccupees}/{tables.length} occupées · {caTotal.toFixed(2)}€ en cours</div>
+        </div>
+      </div>
+
+      {/* CA du jour */}
+      <div className="ca-bar-wrap">
+        <div className="ca-bar-top">
+          <div className="ca-bar-label">CA du jour</div>
+          <div className="ca-bar-value">{caJour.toFixed(2)}€</div>
+        </div>
+        <div className="ca-bar-track">
+          <div className="ca-bar-fill" style={{ width: `${Math.min((caJour / 500) * 100, 100)}%` }} />
+        </div>
+        <div className="ca-bar-sub">
+          <span>Objectif : 500€</span>
+          <span style={{ color: caJour >= 500 ? "var(--olive-bright)" : "var(--muted)" }}>
+            {caJour >= 500 ? "✓ Atteint !" : `${(500 - caJour).toFixed(0)}€ restants`}
+          </span>
+        </div>
+      </div>
+
+      {zones.map(zone => (
+        <div key={zone}>
+          <div className="table-zone-label">{zone}</div>
+          <div className="tables-grid">
+            {tables.filter(t => t.zone === zone).map((t, i) => (
+              <div
+                key={t.id}
+                className={`table-card ${t.statut}`}
+                style={{ animationDelay: `${i * 0.06}s` }}
+                onClick={() => setSelectedTable(t.id)}
+              >
+                <div className={`table-status-dot dot-${t.statut}`} />
+                <div className="table-name">{t.nom}</div>
+                <div className="table-info">
+                  {t.statut === "libre" ? "Libre" : t.statut === "encours" ? `${t.commande.reduce((s,c)=>s+c.qty,0)} articles` : "À encaisser"}
+                </div>
+                {t.total > 0 && <div className="table-total">{t.total.toFixed(2)}€</div>}
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </>
+  );
+}
 // ─── APP ROOT ─────────────────────────────────────────────────────────────
 export default function App() {
   const [page,setPage]=useState("dashboard");
   const [loading,setLoading]=useState(true);
   const [toast,setToast]=useState(null);
   const [data,setData]=useState({reservations:[],stock:[],taches:[],planning:[]});
+  const [caJour,setCaJour]=useState(0);
 
   const showToast=(msg)=>{
     setToast(msg);
-    setTimeout(()=>setToast(null),2000);
+    setTimeout(()=>setToast(null),2500);
   };
 
   useEffect(()=>{
@@ -775,9 +1079,9 @@ export default function App() {
 
   const nav=[
     {id:"dashboard",icon:"🏠",label:"Dashboard"},
+    {id:"tables",icon:"🟢",label:"Tables"},
+    {id:"reservations",icon:"📋",label:"Réserv."},
     {id:"stock",icon:"📦",label:"Stock"},
-    {id:"reservations",icon:"🍽️",label:"Réserv."},
-    {id:"planning",icon:"📅",label:"Planning"},
     {id:"taches",icon:"✅",label:"Tâches"},
   ];
 
@@ -792,7 +1096,8 @@ export default function App() {
         </div>
         {toast&&<div className="toast">{toast}</div>}
         <div className="scroll-area">
-          {page==="dashboard"&&<Dashboard data={data} onNav={setPage}/>}
+          {page==="dashboard"&&<Dashboard data={data} onNav={setPage} caJour={caJour}/>}
+          {page==="tables"&&<Tables data={data} setData={setData} showToast={showToast} caJour={caJour} setCaJour={setCaJour}/>}
           {page==="stock"&&<Stock data={data} setData={setData} showToast={showToast}/>}
           {page==="reservations"&&<Reservations data={data} setData={setData} showToast={showToast}/>}
           {page==="taches"&&<Taches data={data} setData={setData} showToast={showToast}/>}
