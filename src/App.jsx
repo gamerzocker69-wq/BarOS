@@ -839,29 +839,8 @@ function Planning({data,setData,showToast}) {
 
 
 // ─── MENU DATA ─────────────────────────────────────────────────────────────
-const MENU = [
-  // Bières
-  { id:"b1", cat:"Bières", nom:"Heineken", desc:"33cl bouteille", prix:4.5, stockProduit:"Heineken" },
-  { id:"b2", cat:"Bières", nom:"Chouffe", desc:"33cl bouteille", prix:5.5, stockProduit:null },
-  { id:"b3", cat:"Bières", nom:"IPA Locale", desc:"33cl bouteille", prix:5.5, stockProduit:null },
-  { id:"b4", cat:"Bières", nom:"Bière pression", desc:"25cl", prix:4.0, stockProduit:null },
-  // Cocktails
-  { id:"c1", cat:"Cocktails", nom:"Mojito", desc:"Rhum, menthe, citron", prix:9.0, stockProduit:"Poliakov" },
-  { id:"c2", cat:"Cocktails", nom:"Sex on the Beach", desc:"Vodka, pêche, jus", prix:9.0, stockProduit:"Poliakov" },
-  { id:"c3", cat:"Cocktails", nom:"Daïquiri Fraise", desc:"Rhum, fraise, citron", prix:9.0, stockProduit:null },
-  { id:"c4", cat:"Cocktails", nom:"Spritz", desc:"Aperol, Prosecco", prix:8.0, stockProduit:null },
-  { id:"c5", cat:"Cocktails", nom:"Gin Tonic", desc:"Citron, Tonic", prix:10.0, stockProduit:"Citron" },
-  // Softs
-  { id:"s1", cat:"Softs", nom:"Coca-cola", desc:"33cl", prix:3.0, stockProduit:"Coca-cola" },
-  { id:"s2", cat:"Softs", nom:"Thé à la menthe", desc:"Théière", prix:4.0, stockProduit:"The à la mente" },
-  { id:"s3", cat:"Softs", nom:"Eau plate", desc:"50cl", prix:2.5, stockProduit:null },
-  { id:"s4", cat:"Softs", nom:"Jus d'orange", desc:"25cl frais", prix:3.5, stockProduit:null },
-  // Manger
-  { id:"m1", cat:"Manger", nom:"Planche charcuterie", desc:"Saucisson, coppa, jambon", prix:14.0, stockProduit:null },
-  { id:"m2", cat:"Manger", nom:"Plat du jour", desc:"Selon ardoise", prix:13.0, stockProduit:null },
-  { id:"m3", cat:"Manger", nom:"Frites maison", desc:"Portion", prix:5.0, stockProduit:null },
-  { id:"m4", cat:"Manger", nom:"Olives", desc:"Bol", prix:4.0, stockProduit:null },
-];
+// Menu chargé dynamiquement depuis Google Sheets onglet "Menu"
+// Colonnes : nom | categorie | prix | stock_produit | description
 
 const TABLES_CONFIG = [
   // Salle
@@ -881,9 +860,10 @@ const TABLES_CONFIG = [
 
 // ─── TABLES + COMMANDES ────────────────────────────────────────────────────
 function Tables({ data, setData, showToast, caJour, setCaJour, tables, setTables }) {
+  const MENU = data.menu || [];
   const [selectedTable, setSelectedTable] = useState(null);
-  const [menuCat, setMenuCat] = useState("Bières");
-  const cats = ["Bières", "Cocktails", "Softs", "Manger"];
+  const cats = [...new Set(MENU.map(m=>m.cat))].filter(Boolean);
+  const [menuCat, setMenuCat] = useState(cats[0]||"Bières");
 
   const selectedT = selectedTable ? tables.find(t => t.id === selectedTable) : null;
 
@@ -977,11 +957,20 @@ function Tables({ data, setData, showToast, caJour, setCaJour, tables, setTables
         </div>
 
         <div className="menu-items" style={{ paddingBottom: selectedT.commande.length > 0 ? 0 : 20 }}>
+          {MENU.length === 0 && (
+            <div className="empty" style={{padding:"30px 0"}}>
+              Aucun produit dans le menu<br/>
+              <span style={{fontSize:10}}>Ajoute des lignes dans l'onglet Menu du Sheet</span>
+            </div>
+          )}
+          {filteredMenu.length === 0 && MENU.length > 0 && (
+            <div className="empty">Aucun produit dans cette catégorie</div>
+          )}
           {filteredMenu.map(item => (
             <div key={item.id} className="menu-item" onClick={() => addToCommande(item)}>
               <div className="menu-item-info">
                 <div className="menu-item-name">{item.nom}</div>
-                <div className="menu-item-desc">{item.desc}</div>
+                {item.desc && <div className="menu-item-desc">{item.desc}</div>}
               </div>
               <div className="menu-item-right">
                 <div className="menu-item-price">{item.prix.toFixed(2)}€</div>
@@ -1170,7 +1159,7 @@ export default function App() {
   const [page,setPage]=useState("dashboard");
   const [loading,setLoading]=useState(true);
   const [toast,setToast]=useState(null);
-  const [data,setData]=useState({reservations:[],stock:[],taches:[],planning:[]});
+  const [data,setData]=useState({reservations:[],stock:[],taches:[],planning:[],menu:[]});
   const [caJour,setCaJour]=useState(0);
   // Tables state lifted here so Bar page can read it
   const [tables,setTables]=useState(()=>
@@ -1185,17 +1174,28 @@ export default function App() {
   useEffect(()=>{
     const fetchAll=async()=>{
       try{
-        const [res,stock,taches,planning]=await Promise.all([
+        const [res,stock,taches,planning,menuRaw]=await Promise.all([
           fetch(`${API_URL}?sheet=Reservations`).then(r=>r.json()),
           fetch(`${API_URL}?sheet=Stock`).then(r=>r.json()),
           fetch(`${API_URL}?sheet=Taches`).then(r=>r.json()),
           fetch(`${API_URL}?sheet=Planning`).then(r=>r.json()),
+          fetch(`${API_URL}?sheet=Menu`).then(r=>r.json()),
         ]);
+        // Normaliser le menu depuis le Sheet
+        const menu = Array.isArray(menuRaw) ? menuRaw.map((m,i)=>({
+          id: `menu_${i}`,
+          cat: m.categorie || "",
+          nom: m.nom || "",
+          desc: m.description || "",
+          prix: parseFloat(m.prix) || 0,
+          stockProduit: m.stock_produit || null,
+        })) : [];
         setData({
           reservations:Array.isArray(res)?res:[],
           stock:Array.isArray(stock)?stock:[],
           taches:Array.isArray(taches)?taches:[],
           planning:Array.isArray(planning)?planning:[],
+          menu,
         });
       }catch(e){console.error(e);}
       finally{setLoading(false);}
