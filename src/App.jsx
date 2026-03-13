@@ -436,8 +436,8 @@ function Dashboard({data,onNav,caJour}) {
           <div className="ca-bar-label">💰 CA du jour</div>
           <div className="ca-bar-value">{caJour.toFixed(2)}€</div>
         </div>
-        <div className="ca-bar-track"><div className="ca-bar-fill" style={{width:`${Math.min((caJour/500)*100,100)}%`}}/></div>
-        <div className="ca-bar-sub"><span>Objectif 195€</span><span style={{color:caJour>=500?"var(--olive-bright)":"var(--muted)"}}>{caJour>=500?"✓ Atteint !":caJour>0?`${(500-caJour).toFixed(0)}€ restants`:"Ouvrir une table →"}</span></div>
+        <div className="ca-bar-track"><div className="ca-bar-fill" style={{width:`${Math.min((caJour/200)*100,100)}%`}}/></div>
+        <div className="ca-bar-sub"><span>Objectif 200€</span><span style={{color:caJour>=200?"var(--olive-bright)":"var(--muted)"}}>{caJour>=200?"✓ Atteint !":caJour>0?`${(200-caJour).toFixed(0)}€ restants`:"Ouvrir une table →"}</span></div>
       </div>
 
       {/* Alertes stock — seulement si problème */}
@@ -1002,12 +1002,12 @@ function Tables({ data, setData, showToast, caJour, setCaJour }) {
           <div className="ca-bar-value">{caJour.toFixed(2)}€</div>
         </div>
         <div className="ca-bar-track">
-          <div className="ca-bar-fill" style={{ width: `${Math.min((caJour / 195) * 100, 100)}%` }} />
+          <div className="ca-bar-fill" style={{ width: `${Math.min((caJour / 200) * 100, 100)}%` }} />
         </div>
         <div className="ca-bar-sub">
-          <span>Objectif : 195€</span>
-          <span style={{ color: caJour >= 195 ? "var(--olive-bright)" : "var(--muted)" }}>
-            {caJour >= 195 ? "✓ Atteint !" : `${(195 - caJour).toFixed(0)}€ restants`}
+          <span>Objectif : 200€</span>
+          <span style={{ color: caJour >= 200 ? "var(--olive-bright)" : "var(--muted)" }}>
+            {caJour >= 200 ? "✓ Atteint !" : `${(200 - caJour).toFixed(0)}€ restants`}
           </span>
         </div>
       </div>
