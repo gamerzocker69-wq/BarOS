@@ -476,12 +476,12 @@ function Dashboard({data,onNav,caJour}) {
           <div className="kpi-card" onClick={()=>onNav("tables")} style={{position:"relative",overflow:"hidden"}}>
             <span className="kpi-icon">💰</span>
             <div className="kpi-label">CA du jour</div>
-            <div className="kpi-value" style={{fontSize:caJour>=1000?"18px":"26px",color:caJour>=200?"var(--olive-bright)":"var(--cream)"}}>{caJour.toFixed(0)}€</div>
-            <div className={`kpi-sub ${caJour>=200?"":"" }`} style={{color:caJour>=200?"var(--olive-bright)":"var(--muted)"}}>
-              {caJour>=200?"✓ Objectif !":caJour>0?`-${(200-caJour).toFixed(0)}€`:"Objectif 200€"}
+            <div className="kpi-value" style={{fontSize:caJour>=1000?"18px":"26px",color:caJour>=800?"var(--olive-bright)":"var(--cream)"}}>{caJour.toFixed(0)}€</div>
+            <div className={`kpi-sub ${caJour>=800?"":""} style={{color:caJour>=800?"var(--olive-bright)":"var(--muted)"}}>
+              {caJour>=800?"✓ Objectif !":caJour>0?`-${(800-caJour).toFixed(0)}€`:"Objectif 800€"}
             </div>
             {/* mini barre en fond */}
-            <div style={{position:"absolute",bottom:0,left:0,height:3,width:`${Math.min((caJour/200)*100,100)}%`,background:"linear-gradient(90deg,var(--olive-dim),var(--olive-bright))",borderRadius:"0 2px 0 0",transition:"width .8s ease"}}/>
+            <div style={{position:"absolute",bottom:0,left:0,height:3,width:`${Math.min((caJour/800)*100,100)}%`,background:"linear-gradient(90deg,var(--olive-dim),var(--olive-bright))",borderRadius:"0 2px 0 0",transition:"width .8s ease"}}/>
           </div>
         </div>
       </div>
@@ -1070,12 +1070,12 @@ function Tables({ data, setData, showToast, caJour, setCaJour, tables, setTables
           </div>
         </div>
         <div className="ca-bar-track">
-          <div className="ca-bar-fill" style={{ width: `${Math.min((caJour / 200) * 100, 100)}%` }} />
+          <div className="ca-bar-fill" style={{ width: `${Math.min((caJour / 800) * 100, 100)}%` }} />
         </div>
         <div className="ca-bar-sub">
-          <span>Objectif : 200€</span>
-          <span style={{ color: caJour >= 200 ? "var(--olive-bright)" : "var(--muted)" }}>
-            {caJour >= 200 ? "✓ Atteint !" : `${(200 - caJour).toFixed(0)}€ restants`}
+          <span>Objectif : 800€</span>
+          <span style={{ color: caJour >= 800 ? "var(--olive-bright)" : "var(--muted)" }}>
+            {caJour >= 800 ? "✓ Atteint !" : `${(800 - caJour).toFixed(0)}€ restants`}
           </span>
         </div>
       </div>
