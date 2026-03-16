@@ -1261,6 +1261,7 @@ export default function App() {
   const [toast,setToast]=useState(null);
   const [data,setData]=useState({reservations:[],stock:[],taches:[],planning:[],menu:[],commandes:[]});
   const [caJour,setCaJour]=useState(0);
+  const [drawerOpen,setDrawerOpen]=useState(false);
   // Tables state lifted here so Bar page can read it
   const [tables,setTables]=useState(()=>
     TABLES_CONFIG.map(t=>({...t,statut:"libre",commande:[],total:0,envoye:false,envoyeAt:null}))
@@ -1317,7 +1318,6 @@ export default function App() {
     </div>
   );
 
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const commandesEnAttente=tables.filter(t=>t.envoye&&t.commande.length>0).length;
 
   const nav=[
