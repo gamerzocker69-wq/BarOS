@@ -218,6 +218,25 @@ const css = `
   .bar-ticket-qty { font-family:"DM Mono",monospace; font-size:13px; font-weight:700; color:var(--olive-bright); min-width:28px; }
   .bar-ticket-nom { font-size:13px; color:var(--cream); flex:1; }
   .bar-ticket-cat { font-family:"DM Mono",monospace; font-size:9px; padding:2px 7px; border-radius:100px; background:var(--surface2); border:1px solid var(--border); color:var(--muted); }
+  /* ── HAMBURGER MENU ── */
+  .hamburger { width:40px; height:40px; background:var(--surface); border:1px solid var(--border); border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; cursor:pointer; transition:border-color .2s; flex-shrink:0; }
+  .hamburger:hover { border-color:var(--olive); }
+  .hamburger span { width:16px; height:1.5px; background:var(--cream); border-radius:2px; transition:all .2s; }
+  .drawer-overlay { position:absolute; inset:0; background:rgba(0,0,0,.6); z-index:60; animation:fadeIn .2s ease; }
+  .drawer { position:absolute; top:0; left:0; bottom:0; width:75%; background:var(--surface); border-right:1px solid var(--border); z-index:61; animation:slideRight .25s ease; display:flex; flex-direction:column; padding:0 0 24px; }
+  @keyframes slideRight { from{transform:translateX(-100%)} to{transform:translateX(0)} }
+  .drawer-header { padding:60px 24px 20px; border-bottom:1px solid var(--border); }
+  .drawer-logo { font-family:'DM Serif Display',serif; font-size:28px; color:var(--cream); }
+  .drawer-logo em { color:var(--olive-bright); font-style:italic; }
+  .drawer-sub { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); margin-top:4px; }
+  .drawer-nav { padding:16px 12px; flex:1; overflow-y:auto; }
+  .drawer-item { display:flex; align-items:center; gap:14px; padding:12px 14px; border-radius:14px; cursor:pointer; transition:all .2s; margin-bottom:4px; }
+  .drawer-item:hover { background:var(--surface2); }
+  .drawer-item.active { background:rgba(138,154,46,.12); }
+  .drawer-item-icon { font-size:20px; width:32px; text-align:center; }
+  .drawer-item-label { font-size:14px; font-weight:600; color:var(--cream); }
+  .drawer-item.active .drawer-item-label { color:var(--olive-bright); }
+  .drawer-section { font-family:'DM Mono',monospace; font-size:9px; color:var(--muted); letter-spacing:.15em; text-transform:uppercase; padding:12px 14px 6px; }
 `;
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────
@@ -1298,6 +1317,7 @@ export default function App() {
     </div>
   );
 
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const commandesEnAttente=tables.filter(t=>t.envoye&&t.commande.length>0).length;
 
   const nav=[
@@ -1308,6 +1328,22 @@ export default function App() {
     {id:"stock",icon:"📦",label:"Stock"},
   ];
 
+  const allPages=[
+    {section:"Principal"},
+    {id:"dashboard",icon:"🏠",label:"Dashboard"},
+    {id:"tables",icon:"🟢",label:"Tables"},
+    {id:"bar",icon:"🍹",label:"Bar · Cuisine",badge:commandesEnAttente},
+    {section:"Gestion"},
+    {id:"reservations",icon:"📋",label:"Réservations"},
+    {id:"stock",icon:"📦",label:"Stock"},
+    {id:"taches",icon:"✅",label:"Tâches"},
+    {id:"planning",icon:"📅",label:"Planning"},
+    {section:"Rapports"},
+    {id:"historique",icon:"🧾",label:"Historique"},
+  ];
+
+  const navigate=(id)=>{ setPage(id); setDrawerOpen(false); };
+
   return(
     <>
       <style>{css}</style>
@@ -1315,9 +1351,41 @@ export default function App() {
         <div className="notch"/>
         <div className="status-bar">
           <span style={{fontFamily:"'DM Mono',monospace"}}>{new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}</span>
-          <span>▪▪▪ 🔋</span>
+          <div className="hamburger" onClick={()=>setDrawerOpen(true)}>
+            <span/><span/><span/>
+          </div>
         </div>
         {toast&&<div className="toast">{toast}</div>}
+
+        {/* Drawer menu */}
+        {drawerOpen&&(
+          <div className="drawer-overlay" onClick={()=>setDrawerOpen(false)}>
+            <div className="drawer" onClick={e=>e.stopPropagation()}>
+              <div className="drawer-header">
+                <div className="drawer-logo">Bar<em>OS</em></div>
+                <div className="drawer-sub">Menu principal</div>
+              </div>
+              <div className="drawer-nav">
+                {allPages.map((item,i)=>
+                  item.section ? (
+                    <div key={i} className="drawer-section">{item.section}</div>
+                  ) : (
+                    <div key={item.id} className={`drawer-item ${page===item.id?"active":""}`} onClick={()=>navigate(item.id)} style={{position:"relative"}}>
+                      <div className="drawer-item-icon">{item.icon}</div>
+                      <div className="drawer-item-label">{item.label}</div>
+                      {item.badge>0&&(
+                        <div style={{marginLeft:"auto",width:18,height:18,background:"#e74c3c",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'DM Mono',monospace",fontSize:9,fontWeight:700,color:"#fff"}}>
+                          {item.badge}
+                        </div>
+                      )}
+                    </div>
+                  )
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="scroll-area">
           {page==="dashboard"&&<Dashboard data={data} onNav={setPage} caJour={caJour}/>}
           {page==="tables"&&<Tables data={data} setData={setData} showToast={showToast} caJour={caJour} setCaJour={setCaJour} tables={tables} setTables={setTables}/>}
