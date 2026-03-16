@@ -900,7 +900,12 @@ function Tables({ data, setData, showToast, caJour, setCaJour, tables, setTables
   const encaisser = () => {
     if (!selectedT || selectedT.commande.length === 0) return;
     const montant = selectedT.total;
-    setCaJour(ca => ca + montant);
+    setCaJour(ca => {
+      const newCa = ca + montant;
+      // Sauvegarder dans Google Sheets Config
+      apiCall({ sheet: "Config", action: "update", rowId: "ca_jour", searchCol: "cle", data: { valeur: newCa.toFixed(2) } });
+      return newCa;
+    });
     setTables(ts => ts.map(t => t.id === selectedTable
       ? { ...t, statut: "libre", commande: [], total: 0, envoye: false, envoyeAt: null }
       : t
@@ -1011,7 +1016,15 @@ function Tables({ data, setData, showToast, caJour, setCaJour, tables, setTables
       <div className="ca-bar-wrap">
         <div className="ca-bar-top">
           <div className="ca-bar-label">CA du jour</div>
-          <div className="ca-bar-value">{caJour.toFixed(2)}€</div>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <div className="ca-bar-value">{caJour.toFixed(2)}€</div>
+            <div onClick={()=>{
+              if(!window.confirm("Remettre le CA à 0 ?")) return;
+              setCaJour(0);
+              apiCall({sheet:"Config",action:"update",rowId:"ca_jour",searchCol:"cle",data:{valeur:"0"}});
+              showToast("CA remis à zéro ✓");
+            }} style={{fontFamily:"'DM Mono',monospace",fontSize:9,padding:"3px 8px",borderRadius:8,background:"var(--surface2)",border:"1px solid var(--border)",color:"var(--muted)",cursor:"pointer"}}>reset</div>
+          </div>
         </div>
         <div className="ca-bar-track">
           <div className="ca-bar-fill" style={{ width: `${Math.min((caJour / 200) * 100, 100)}%` }} />
@@ -1159,13 +1172,19 @@ export default function App() {
   useEffect(()=>{
     const fetchAll=async()=>{
       try{
-        const [res,stock,taches,planning,menuRaw]=await Promise.all([
+        const [res,stock,taches,planning,menuRaw,config]=await Promise.all([
           fetch(`${API_URL}?sheet=Reservations`).then(r=>r.json()),
           fetch(`${API_URL}?sheet=Stock`).then(r=>r.json()),
           fetch(`${API_URL}?sheet=Taches`).then(r=>r.json()),
           fetch(`${API_URL}?sheet=Planning`).then(r=>r.json()),
           fetch(`${API_URL}?sheet=Menu`).then(r=>r.json()),
+          fetch(`${API_URL}?sheet=Config`).then(r=>r.json()),
         ]);
+        // Charger CA du jour depuis Config
+        if(Array.isArray(config)){
+          const caRow=config.find(c=>c.cle==="ca_jour");
+          if(caRow) setCaJour(parseFloat(caRow.valeur)||0);
+        }
         // Normaliser le menu depuis le Sheet
         const menu = Array.isArray(menuRaw) ? menuRaw.map((m,i)=>({
           id: `menu_${i}`,
