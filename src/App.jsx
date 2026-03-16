@@ -900,9 +900,22 @@ function Tables({ data, setData, showToast, caJour, setCaJour, tables, setTables
   const encaisser = () => {
     if (!selectedT || selectedT.commande.length === 0) return;
     const montant = selectedT.total;
+    const now = new Date();
+    const heure = now.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
+    const date = now.toISOString().split("T")[0];
+    // Résumé des articles
+    const items = selectedT.commande.map(c=>`${c.qty}x ${c.nom}`).join(", ");
+    // Sauvegarder dans Commandes
+    apiCall({ sheet: "Commandes", action: "add", data: {
+      table: selectedT.nom,
+      items,
+      total: montant.toFixed(2),
+      heure,
+      date,
+      statut: "Encaissé"
+    }});
     setCaJour(ca => {
       const newCa = ca + montant;
-      // Sauvegarder dans Google Sheets Config
       apiCall({ sheet: "Config", action: "update", rowId: "ca_jour", searchCol: "cle", data: { valeur: newCa.toFixed(2) } });
       return newCa;
     });
@@ -1062,6 +1075,76 @@ function Tables({ data, setData, showToast, caJour, setCaJour, tables, setTables
     </>
   );
 }
+
+// ─── HISTORIQUE ────────────────────────────────────────────────────────────
+function Historique({data}) {
+  const [filtre, setFiltre] = useState("today");
+  const today = new Date().toISOString().split("T")[0];
+
+  const commandes = (data.commandes||[]).filter(c => {
+    if (filtre === "today") return c.date === today;
+    return true;
+  }).sort((a,b) => String(b.date+b.heure).localeCompare(String(a.date+a.heure)));
+
+  const totalJour = commandes
+    .filter(c => c.date === today)
+    .reduce((s,c) => s + parseFloat(c.total||0), 0);
+
+  const totalAll = (data.commandes||[]).reduce((s,c) => s + parseFloat(c.total||0), 0);
+
+  return (
+    <>
+      <div className="page-header">
+        <div>
+          <div className="page-title">Historique</div>
+          <div className="page-count">{commandes.length} commande{commandes.length!==1?"s":""}</div>
+        </div>
+        <div style={{fontFamily:"'DM Mono',monospace",fontSize:16,fontWeight:700,color:"var(--olive-bright)"}}>
+          {filtre==="today" ? `${totalJour.toFixed(2)}€` : `${totalAll.toFixed(2)}€`}
+        </div>
+      </div>
+
+      {/* Filtres */}
+      <div style={{paddingTop:14}}>
+        <div className="filter-row">
+          {[["today","Aujourd'hui"],["all","Tout"]].map(([val,label])=>(
+            <div key={val} className={`pill ${filtre===val?"active":""}`} onClick={()=>setFiltre(val)}>{label}</div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{padding:"0 24px"}}>
+        {commandes.length === 0 && (
+          <div className="empty">Aucune commande{filtre==="today"?" aujourd'hui":""}</div>
+        )}
+        {commandes.map((c,i) => (
+          <div key={i} style={{
+            background:"var(--surface)", border:"1px solid var(--border)",
+            borderRadius:14, padding:"14px 16px", marginBottom:8,
+            animation:"slideUp .3s ease both", animationDelay:`${i*.04}s`
+          }}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                <div style={{
+                  width:36,height:36,borderRadius:10,
+                  background:"rgba(138,154,46,.1)",border:"1px solid var(--olive-dim)",
+                  display:"flex",alignItems:"center",justifyContent:"center",fontSize:16
+                }}>🧾</div>
+                <div>
+                  <div style={{fontSize:13,fontWeight:700,color:"var(--cream)"}}>{c.table}</div>
+                  <div style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:"var(--muted)"}}>{c.heure}{c.date!==today?` · ${c.date}`:""}</div>
+                </div>
+              </div>
+              <div style={{fontFamily:"'DM Mono',monospace",fontSize:16,fontWeight:700,color:"var(--olive-bright)"}}>{parseFloat(c.total||0).toFixed(2)}€</div>
+            </div>
+            <div style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:"var(--muted)",lineHeight:1.6,paddingLeft:46}}>{c.items}</div>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
 // ─── APP ROOT ─────────────────────────────────────────────────────────────
 
 // ─── BAR PAGE ──────────────────────────────────────────────────────────────
@@ -1157,7 +1240,7 @@ export default function App() {
   const [page,setPage]=useState("dashboard");
   const [loading,setLoading]=useState(true);
   const [toast,setToast]=useState(null);
-  const [data,setData]=useState({reservations:[],stock:[],taches:[],planning:[],menu:[]});
+  const [data,setData]=useState({reservations:[],stock:[],taches:[],planning:[],menu:[],commandes:[]});
   const [caJour,setCaJour]=useState(0);
   // Tables state lifted here so Bar page can read it
   const [tables,setTables]=useState(()=>
@@ -1172,13 +1255,14 @@ export default function App() {
   useEffect(()=>{
     const fetchAll=async()=>{
       try{
-        const [res,stock,taches,planning,menuRaw,config]=await Promise.all([
+        const [res,stock,taches,planning,menuRaw,config,commandes]=await Promise.all([
           fetch(`${API_URL}?sheet=Reservations`).then(r=>r.json()),
           fetch(`${API_URL}?sheet=Stock`).then(r=>r.json()),
           fetch(`${API_URL}?sheet=Taches`).then(r=>r.json()),
           fetch(`${API_URL}?sheet=Planning`).then(r=>r.json()),
           fetch(`${API_URL}?sheet=Menu`).then(r=>r.json()),
           fetch(`${API_URL}?sheet=Config`).then(r=>r.json()),
+          fetch(`${API_URL}?sheet=Commandes`).then(r=>r.json()),
         ]);
         // Charger CA du jour depuis Config
         if(Array.isArray(config)){
@@ -1200,6 +1284,7 @@ export default function App() {
           taches:Array.isArray(taches)?taches:[],
           planning:Array.isArray(planning)?planning:[],
           menu,
+          commandes:Array.isArray(commandes)?commandes:[],
         });
       }catch(e){console.error(e);}
       finally{setLoading(false);}
@@ -1219,8 +1304,8 @@ export default function App() {
     {id:"dashboard",icon:"🏠",label:"Dashboard"},
     {id:"tables",icon:"🟢",label:"Tables"},
     {id:"bar",icon:"🍹",label:"Bar",badge:commandesEnAttente},
+    {id:"historique",icon:"🧾",label:"Historique"},
     {id:"stock",icon:"📦",label:"Stock"},
-    {id:"planning",icon:"📅",label:"Planning"},
   ];
 
   return(
@@ -1240,6 +1325,7 @@ export default function App() {
           {page==="stock"&&<Stock data={data} setData={setData} showToast={showToast}/>}
           {page==="reservations"&&<Reservations data={data} setData={setData} showToast={showToast}/>}
           {page==="taches"&&<Taches data={data} setData={setData} showToast={showToast}/>}
+          {page==="historique"&&<Historique data={data}/>}
           {page==="planning"&&<Planning data={data} setData={setData} showToast={showToast}/>}
         </div>
         <div className="bottom-nav">
