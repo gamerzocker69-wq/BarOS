@@ -218,6 +218,17 @@ const css = `
   .bar-ticket-qty { font-family:"DM Mono",monospace; font-size:13px; font-weight:700; color:var(--olive-bright); min-width:28px; }
   .bar-ticket-nom { font-size:13px; color:var(--cream); flex:1; }
   .bar-ticket-cat { font-family:"DM Mono",monospace; font-size:9px; padding:2px 7px; border-radius:100px; background:var(--surface2); border:1px solid var(--border); color:var(--muted); }
+  .ticket-status-bar { display:flex; gap:8px; padding:10px 16px 12px; border-top:1px solid var(--border); }
+  .btn-status { flex:1; padding:9px 6px; border-radius:12px; font-family:'DM Mono',monospace; font-size:10px; font-weight:700; cursor:pointer; text-align:center; transition:all .2s; border:1.5px solid transparent; }
+  .btn-status.enprep { background:rgba(201,168,76,.12); border-color:rgba(201,168,76,.4); color:var(--gold); }
+  .btn-status.pret { background:rgba(138,154,46,.15); border-color:var(--olive-dim); color:var(--olive-bright); }
+  .btn-status.servi { background:var(--surface2); border-color:var(--border); color:var(--muted); }
+  .btn-status.active { transform:scale(1.02); }
+  .ticket-statut-badge { font-family:'DM Mono',monospace; font-size:9px; padding:3px 10px; border-radius:100px; font-weight:700; }
+  .badge-attente { background:rgba(192,57,43,.12); border:1px solid rgba(192,57,43,.3); color:#e74c3c; }
+  .badge-enprep { background:rgba(201,168,76,.12); border:1px solid rgba(201,168,76,.3); color:var(--gold); }
+  .badge-pret { background:rgba(138,154,46,.15); border:1px solid var(--olive-dim); color:var(--olive-bright); }
+  .badge-servi { background:var(--surface2); border:1px solid var(--border); color:var(--muted); }
   /* ── HAMBURGER MENU ── */
   .hamburger { width:40px; height:40px; background:var(--surface); border:1px solid var(--border); border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; cursor:pointer; transition:border-color .2s; flex-shrink:0; }
   .hamburger:hover { border-color:var(--olive); }
@@ -896,7 +907,7 @@ function Tables({ data, setData, showToast, caJour, setCaJour, tables, setTables
     if (!selectedT || selectedT.commande.length === 0) return;
     // Marquer la table comme "envoyée" → visible sur page Bar
     setTables(ts => ts.map(t => t.id === selectedTable
-      ? { ...t, envoye: true, envoyeAt: Date.now() }
+      ? { ...t, envoye: true, envoyeAt: Date.now(), ticketStatut: "enprep" }
       : t
     ));
     showToast(`🍹 Envoyé au bar — ${selectedT.nom} ✓`);
@@ -939,7 +950,7 @@ function Tables({ data, setData, showToast, caJour, setCaJour, tables, setTables
       return newCa;
     });
     setTables(ts => ts.map(t => t.id === selectedTable
-      ? { ...t, statut: "libre", commande: [], total: 0, envoye: false, envoyeAt: null }
+      ? { ...t, statut: "libre", commande: [], total: 0, envoye: false, envoyeAt: null, ticketStatut: "attente" }
       : t
     ));
     showToast(`💰 ${montant.toFixed(2)}€ encaissé — ${selectedT.nom} libérée ✓`);
@@ -948,7 +959,7 @@ function Tables({ data, setData, showToast, caJour, setCaJour, tables, setTables
 
   const libererTable = () => {
     setTables(ts => ts.map(t => t.id === selectedTable
-      ? { ...t, statut: "libre", commande: [], total: 0, envoye: false, envoyeAt: null }
+      ? { ...t, statut: "libre", commande: [], total: 0, envoye: false, envoyeAt: null, ticketStatut: "attente" }
       : t
     ));
     setSelectedTable(null);
@@ -1167,10 +1178,24 @@ function Historique({data}) {
 // ─── APP ROOT ─────────────────────────────────────────────────────────────
 
 // ─── BAR PAGE ──────────────────────────────────────────────────────────────
-function Bar({ tables }) {
-  // Toutes les tables avec commandes envoyées (statut encours ou apayer)
+function Bar({ tables, setTables, showToast }) {
   const tablesActives = tables.filter(t => t.commande.length > 0 && t.envoye);
-  const totalEnAttente = tablesActives.reduce((s, t) => s + t.commande.reduce((a, c) => a + c.qty, 0), 0);
+  const enAttente = tablesActives.filter(t => t.ticketStatut === "enprep" || t.ticketStatut === "attente").length;
+
+  const setStatut = (tableId, statut) => {
+    setTables(ts => ts.map(t => t.id === tableId ? { ...t, ticketStatut: statut } : t));
+    if (statut === "pret") {
+      showToast("🔔 Commande prête à servir !");
+    } else if (statut === "servi") {
+      showToast("✓ Servi — ticket archivé");
+    }
+  };
+
+  const STATUTS = [
+    { id: "enprep", label: "⏳ En prép" },
+    { id: "pret",   label: "✅ Prêt !" },
+    { id: "servi",  label: "✓ Servi" },
+  ];
 
   return (
     <>
@@ -1179,17 +1204,17 @@ function Bar({ tables }) {
           <div className="page-title">Bar · Cuisine</div>
           <div className="page-count">
             {tablesActives.length > 0
-              ? `${tablesActives.length} table${tablesActives.length > 1 ? "s" : ""} · ${totalEnAttente} articles`
+              ? `${tablesActives.length} ticket${tablesActives.length > 1 ? "s" : ""} · ${enAttente} en cours`
               : "Aucune commande en attente"}
           </div>
         </div>
-        {tablesActives.length > 0 && (
+        {enAttente > 0 && (
           <div style={{
-            width: 32, height: 32, borderRadius: "50%",
-            background: "rgba(192,57,43,.15)", border: "1px solid rgba(192,57,43,.4)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontFamily: "'DM Mono',monospace", fontSize: 13, fontWeight: 700, color: "#e74c3c"
-          }}>{tablesActives.length}</div>
+            width:32,height:32,borderRadius:"50%",
+            background:"rgba(192,57,43,.15)",border:"1px solid rgba(192,57,43,.4)",
+            display:"flex",alignItems:"center",justifyContent:"center",
+            fontFamily:"'DM Mono',monospace",fontSize:13,fontWeight:700,color:"#e74c3c"
+          }}>{enAttente}</div>
         )}
       </div>
 
@@ -1202,48 +1227,67 @@ function Bar({ tables }) {
         ) : (
           tablesActives.map((t, i) => {
             const mins = Math.floor((Date.now() - t.envoyeAt) / 60000);
-            const isUrgent = mins >= 5;
-            // Grouper par catégorie pour le bar
+            const isUrgent = mins >= 5 && t.ticketStatut !== "servi";
             const parCat = t.commande.reduce((acc, item) => {
-              const cat = item.cat;
-              if (!acc[cat]) acc[cat] = [];
-              acc[cat].push(item);
+              if (!acc[item.cat]) acc[item.cat] = [];
+              acc[item.cat].push(item);
               return acc;
             }, {});
+            const statut = t.ticketStatut || "enprep";
             return (
-              <div key={t.id} className={`bar-ticket ${isUrgent ? "urgent" : ""}`} style={{ animationDelay: `${i * 0.08}s` }}>
+              <div key={t.id} className={`bar-ticket ${isUrgent ? "urgent" : ""}`}
+                style={{
+                  animationDelay:`${i*0.08}s`,
+                  opacity: statut === "servi" ? 0.5 : 1,
+                  transition:"opacity .3s"
+                }}>
                 <div className="bar-ticket-header">
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{display:"flex",alignItems:"center",gap:10}}>
                     <div style={{
-                      width: 8, height: 8, borderRadius: "50%",
-                      background: isUrgent ? "#e74c3c" : "var(--olive-bright)",
-                      animation: "blink 1.5s infinite"
-                    }} />
+                      width:8,height:8,borderRadius:"50%",
+                      background: statut==="pret" ? "var(--olive-bright)" : statut==="servi" ? "var(--muted)" : isUrgent ? "#e74c3c" : "var(--gold)",
+                      animation: statut==="pret" ? "blink 1s infinite" : "none"
+                    }}/>
                     <div className="bar-ticket-table">{t.nom}</div>
                     <div style={{
-                      fontFamily: "'DM Mono',monospace", fontSize: 9,
-                      padding: "2px 8px", borderRadius: 100,
-                      background: t.zone === "Terrasse" ? "var(--success-bg)" : t.zone === "Bar" ? "var(--info-bg)" : "var(--surface2)",
-                      border: "1px solid var(--border)",
-                      color: t.zone === "Terrasse" ? "var(--olive-bright)" : t.zone === "Bar" ? "#6ab0d4" : "var(--muted)"
+                      fontFamily:"'DM Mono',monospace",fontSize:9,
+                      padding:"2px 8px",borderRadius:100,
+                      background: t.zone==="Terrasse"?"var(--success-bg)":t.zone==="Bar"?"var(--info-bg)":"var(--surface2)",
+                      border:"1px solid var(--border)",
+                      color: t.zone==="Terrasse"?"var(--olive-bright)":t.zone==="Bar"?"#6ab0d4":"var(--muted)"
                     }}>{t.zone}</div>
                   </div>
-                  <div className="bar-ticket-time" style={{ color: isUrgent ? "#e74c3c" : "var(--muted)" }}>
-                    {mins === 0 ? "À l'instant" : `${mins} min`}{isUrgent ? " ⚠️" : ""}
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    <span className={`ticket-statut-badge badge-${statut}`}>
+                      {statut==="enprep"?"⏳ En prép":statut==="pret"?"✅ Prêt !":"✓ Servi"}
+                    </span>
+                    <div className="bar-ticket-time" style={{color:isUrgent?"#e74c3c":"var(--muted)"}}>
+                      {mins===0?"À l'instant":`${mins} min`}{isUrgent?" ⚠️":""}
+                    </div>
                   </div>
                 </div>
                 <div className="bar-ticket-body">
                   {Object.entries(parCat).map(([cat, items]) => (
                     <div key={cat}>
-                      <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: "var(--muted)", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4, marginTop: 6 }}>{cat}</div>
+                      <div style={{fontFamily:"'DM Mono',monospace",fontSize:9,color:"var(--muted)",letterSpacing:".1em",textTransform:"uppercase",marginBottom:4,marginTop:6}}>{cat}</div>
                       {items.map(item => (
                         <div key={item.id} className="bar-ticket-line">
                           <div className="bar-ticket-qty">×{item.qty}</div>
-                          <div className="bar-ticket-nom">{item.nom}</div>
-                          <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: "var(--muted)" }}>{item.desc}</div>
+                          <div className="bar-ticket-nom" style={{textDecoration:statut==="servi"?"line-through":"none"}}>{item.nom}</div>
+                          <div style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:"var(--muted)"}}>{item.desc}</div>
                         </div>
                       ))}
                     </div>
+                  ))}
+                </div>
+                {/* Boutons statut */}
+                <div className="ticket-status-bar">
+                  {STATUTS.map(s => (
+                    <div key={s.id}
+                      className={`btn-status ${s.id} ${statut===s.id?"active":""}`}
+                      style={{opacity:statut===s.id?1:.45}}
+                      onClick={()=>setStatut(t.id, s.id)}
+                    >{s.label}</div>
                   ))}
                 </div>
               </div>
@@ -1264,7 +1308,7 @@ export default function App() {
   const [drawerOpen,setDrawerOpen]=useState(false);
   // Tables state lifted here so Bar page can read it
   const [tables,setTables]=useState(()=>
-    TABLES_CONFIG.map(t=>({...t,statut:"libre",commande:[],total:0,envoye:false,envoyeAt:null}))
+    TABLES_CONFIG.map(t=>({...t,statut:"libre",commande:[],total:0,envoye:false,envoyeAt:null,ticketStatut:"attente"}))
   );
 
   const showToast=(msg)=>{
@@ -1389,7 +1433,7 @@ export default function App() {
         <div className="scroll-area">
           {page==="dashboard"&&<Dashboard data={data} onNav={setPage} caJour={caJour}/>}
           {page==="tables"&&<Tables data={data} setData={setData} showToast={showToast} caJour={caJour} setCaJour={setCaJour} tables={tables} setTables={setTables}/>}
-          {page==="bar"&&<Bar tables={tables}/>}
+          {page==="bar"&&<Bar tables={tables} setTables={setTables} showToast={showToast}/>}
           {page==="stock"&&<Stock data={data} setData={setData} showToast={showToast}/>}
           {page==="reservations"&&<Reservations data={data} setData={setData} showToast={showToast}/>}
           {page==="taches"&&<Taches data={data} setData={setData} showToast={showToast}/>}
