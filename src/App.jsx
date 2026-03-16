@@ -477,7 +477,7 @@ function Dashboard({data,onNav,caJour}) {
             <span className="kpi-icon">💰</span>
             <div className="kpi-label">CA du jour</div>
             <div className="kpi-value" style={{fontSize:caJour>=1000?"18px":"26px",color:caJour>=800?"var(--olive-bright)":"var(--cream)"}}>{caJour.toFixed(0)}€</div>
-            <div className={`kpi-sub ${caJour>=800?"":""} style={{color:caJour>=800?"var(--olive-bright)":"var(--muted)"}}>
+            <div className={`kpi-sub`} style={{color:caJour>=800?"var(--olive-bright)":"var(--muted)"}}>
               {caJour>=800?"✓ Objectif !":caJour>0?`-${(800-caJour).toFixed(0)}€`:"Objectif 800€"}
             </div>
             {/* mini barre en fond */}
@@ -1307,14 +1307,31 @@ export default function App() {
   const [caJour,setCaJour]=useState(0);
   const [drawerOpen,setDrawerOpen]=useState(false);
   // Tables state lifted here so Bar page can read it
-  const [tables,setTables]=useState(()=>
-    TABLES_CONFIG.map(t=>({...t,statut:"libre",commande:[],total:0,envoye:false,envoyeAt:null,ticketStatut:"attente"}))
-  );
+  const [tables,setTables]=useState(()=>{
+    try {
+      const saved = localStorage.getItem("baros_tables");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Merge avec TABLES_CONFIG pour garder les nouvelles tables si config change
+        return TABLES_CONFIG.map(t => {
+          const found = parsed.find(p => p.id === t.id);
+          return found ? {...t, ...found} : {...t,statut:"libre",commande:[],total:0,envoye:false,envoyeAt:null,ticketStatut:"attente"};
+        });
+      }
+    } catch(e) {}
+    return TABLES_CONFIG.map(t=>({...t,statut:"libre",commande:[],total:0,envoye:false,envoyeAt:null,ticketStatut:"attente"}));
+  });
 
   const showToast=(msg)=>{
     setToast(msg);
     setTimeout(()=>setToast(null),2500);
   };
+
+  // Persister les tables dans localStorage à chaque changement
+  useEffect(()=>{
+    try { localStorage.setItem("baros_tables", JSON.stringify(tables)); }
+    catch(e) {}
+  },[tables]);
 
   useEffect(()=>{
     const fetchAll=async()=>{
